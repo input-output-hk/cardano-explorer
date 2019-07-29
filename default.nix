@@ -36,8 +36,10 @@ in {
   inherit (haskellPackages.cardano-explorer.identifier) version;
 
   # Grab the executable component of our package.
-  inherit (haskellPackages.cardano-explorer.components.exes)
-    cardano-explorer;
+  inherit (haskellPackages.cardano-explorer.components.exes) cardano-explorer;
+
+  cardano-sl-core = haskellPackages.cardano-explorer-core.components.library;
+  cardano-explorer-db-node = haskellPackages.cardano-explorer-db-node.components.exes.cardano-explorer-db-node;
 
   tests = util.collectComponents "tests" util.isIohkSkeleton haskellPackages;
   benchmarks = util.collectComponents "benchmarks" util.isIohkSkeleton haskellPackages;
