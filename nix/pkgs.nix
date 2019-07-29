@@ -30,7 +30,7 @@ let
     modules = [
       # Add source filtering to local packages
       {
-        packages.cardano-explorer.src = src;
+        packages.cardano-explorer.src = src + "/cardano-explorer";
         # packages.another-package = src + /another-package;
       }
 
