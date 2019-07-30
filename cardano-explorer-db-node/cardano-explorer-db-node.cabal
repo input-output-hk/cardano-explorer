@@ -33,12 +33,27 @@ library
   exposed-modules:      Explorer.DB
                         Explorer.Node
 
-  other-modules:        Explorer.DB.Migration.Version
+  other-modules:        Explorer.DB.PGConfig
+                        Explorer.DB.Migration
+                        Explorer.DB.Migration.Haskell
+                        Explorer.DB.Migration.Version
 
   build-depends:        base                            >= 4.12         && < 4.13
+                      , bytestring
                       , cardano-explorer-core
+                      , containers
+                      , conduit
+                      , conduit-extra
+                      , directory
                       , extra
+                      , filepath
+                      , monad-logger
+                      , persistent
+                      , persistent-postgresql
+                      , resourcet
+                      , text
                       , time
+                      , transformers
 
 executable cardano-explorer-db-node
   default-language:     Haskell2010
