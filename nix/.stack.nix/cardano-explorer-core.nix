@@ -15,7 +15,15 @@
       buildType = "Simple";
       };
     components = {
-      "library" = { depends = [ (hsPkgs.base) ]; };
+      "library" = {
+        depends = [
+          (hsPkgs.base)
+          (hsPkgs.bytestring)
+          (hsPkgs.persistent)
+          (hsPkgs.persistent-postgresql)
+          (hsPkgs.persistent-template)
+          ];
+        };
       tests = {
         "test" = {
           depends = [ (hsPkgs.base) (hsPkgs.cardano-explorer-core) ];

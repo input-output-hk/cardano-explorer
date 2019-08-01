@@ -16,16 +16,44 @@
       };
     components = {
       "library" = {
-        depends = [ (hsPkgs.base) (hsPkgs.cardano-explorer-core) ];
+        depends = [
+          (hsPkgs.base)
+          (hsPkgs.bytestring)
+          (hsPkgs.cardano-explorer-core)
+          (hsPkgs.conduit)
+          (hsPkgs.conduit-extra)
+          (hsPkgs.containers)
+          (hsPkgs.directory)
+          (hsPkgs.extra)
+          (hsPkgs.filepath)
+          (hsPkgs.monad-logger)
+          (hsPkgs.persistent)
+          (hsPkgs.persistent-postgresql)
+          (hsPkgs.resourcet)
+          (hsPkgs.text)
+          (hsPkgs.time)
+          (hsPkgs.transformers)
+          ];
         };
       exes = {
         "cardano-explorer-db-node" = {
           depends = [ (hsPkgs.base) (hsPkgs.cardano-explorer-db-node) ];
           };
+        "cardano-explorer-db-manage" = {
+          depends = [
+            (hsPkgs.base)
+            (hsPkgs.cardano-explorer-db-node)
+            (hsPkgs.optparse-applicative)
+            ];
+          };
         };
       tests = {
         "test" = {
-          depends = [ (hsPkgs.base) (hsPkgs.cardano-explorer-db-node) ];
+          depends = [
+            (hsPkgs.base)
+            (hsPkgs.cardano-explorer-db-node)
+            (hsPkgs.hedgehog)
+            ];
           };
         };
       };
