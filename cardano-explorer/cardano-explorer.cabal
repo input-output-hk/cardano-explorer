@@ -38,6 +38,7 @@ library
                       , Explorer.Web.ClientTypes
                       , Explorer.Web.Error
                       , Explorer.Web.LegacyApi
+                      , Explorer.Web.API1
                       , Explorer.Web.Query
                       , Explorer.Web.Server
                       , Explorer.Web.TestServer

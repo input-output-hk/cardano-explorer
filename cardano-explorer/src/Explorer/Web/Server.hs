@@ -12,9 +12,11 @@ import           Explorer.DB                 (blockBlockNo, blockHash
                                              , toConnectionString
                                              , blockMerkelRoot
                                              , queryBlockCount
+                                             , queryLatestBlockId
                                              , queryMeta
                                              , Meta(metaStartTime, metaSlotDuration, Meta)
                                              , txHash, txOutAddress, txOutValue, txFee
+                                             , txOutIndex
                                              , TxOut(TxOut))
 import           Explorer.Web.Api            (ExplorerApi, explorerApi)
 import           Explorer.Web.ClientTypes    (CAddress (CAddress), CAddressSummary (CAddressSummary, caAddress, caBalance, caTxList, caTxNum, caType),
@@ -34,7 +36,9 @@ import           Explorer.Web.ClientTypes    (CAddress (CAddress), CAddressSumma
                                               CUtxo (CUtxo, cuAddress, cuCoins, cuId, cuOutIndex),
                                               mkCCoin, adaToCCoin)
 import           Explorer.Web.Error          (ExplorerError (Internal))
-import           Explorer.Web.Query          (queryBlockSummary, queryTxSummary, queryBlockTxs, TxWithInputsOutputs(txwTx, txwInputs, txwOutputs, TxWithInputsOutputs))
+import           Explorer.Web.Query          (queryBlockSummary, queryTxSummary, queryBlockTxs, TxWithInputsOutputs(txwTx, txwInputs, txwOutputs, TxWithInputsOutputs), queryBlockIdFromHeight, queryUtxoSnapshot)
+import           Explorer.Web.API1 (ExplorerApi1Record(ExplorerApi1Record,_utxoHeight, _utxoHash), V1Utxo(V1Utxo))
+import qualified Explorer.Web.API1 as API1
 import           Explorer.Web.LegacyApi      (ExplorerApiRecord (_genesisSummary, _genesisAddressInfo, _genesisPagesTotal, _epochPages, _epochSlots, _statsTxs, _txsSummary, _addressSummary, _addressUtxoBulk, _blocksSummary, _blocksTxs, _txsLast, _dumpBlockRange, _totalAda, _blocksPages, _blocksPagesTotal, ExplorerApiRecord), TxsStats, PageNumber)
 
 import           Cardano.Chain.Slotting      (EpochNumber (EpochNumber))
@@ -42,7 +46,7 @@ import           Cardano.Chain.Slotting      (EpochNumber (EpochNumber))
 import           Control.Monad.IO.Class      (liftIO, MonadIO)
 import           Control.Monad.Logger        (runStdoutLoggingT)
 import           Control.Monad.Trans.Reader  (ReaderT)
-import           Control.Monad.Trans.Except (ExceptT, runExceptT, throwE)
+import           Control.Monad.Trans.Except (ExceptT(ExceptT), runExceptT, throwE)
 import           Data.Maybe (fromMaybe)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base16      as B16
@@ -53,10 +57,10 @@ import           Data.Time.Clock.POSIX       (POSIXTime, utcTimeToPOSIXSeconds)
 import           Data.Word                   (Word16, Word64)
 import           Data.Int (Int64)
 import           Network.Wai.Handler.Warp    (run)
-import           Servant                     (Application, Handler, Server,
-                                              serve)
+import           Servant                     (Application, Handler, Server, serve)
 import           Servant.API.Generic         (toServant)
 import           Servant.Server.Generic      (AsServerT)
+import           Servant.API ((:<|>)((:<|>)))
 
 import           Database.Persist.Postgresql (withPostgresqlConn)
 import           Database.Persist.Sql        (SqlBackend, runSqlConn)
@@ -79,24 +83,30 @@ explorerApp :: SqlBackend -> Application
 explorerApp backend = serve explorerApi (explorerHandlers backend)
 
 explorerHandlers :: SqlBackend -> Server ExplorerApi
-explorerHandlers backend = toServant (ExplorerApiRecord
-  { _totalAda           = totalAda backend
-  , _dumpBlockRange     = testDumpBlockRange backend
-  , _blocksPages        = testBlocksPages backend
-  , _blocksPagesTotal   = getBlocksPagesTotal backend
-  , _blocksSummary      = blocksSummary backend
-  , _blocksTxs          = getBlockTxs backend
-  , _txsLast            = getLastTxs backend
-  , _txsSummary         = testTxsSummary backend
-  , _addressSummary     = testAddressSummary backend
-  , _addressUtxoBulk    = testAddressUtxoBulk backend
-  , _epochPages         = testEpochPageSearch backend
-  , _epochSlots         = testEpochSlotSearch backend
-  , _genesisSummary     = testGenesisSummary backend
-  , _genesisPagesTotal  = testGenesisPagesTotal backend
-  , _genesisAddressInfo = testGenesisAddressInfo backend
-  , _statsTxs           = testStatsTxs backend
-  } :: ExplorerApiRecord (AsServerT Handler))
+explorerHandlers backend = (toServant oldHandlers) :<|> (toServant newHandlers)
+  where
+    oldHandlers = ExplorerApiRecord
+      { _totalAda           = totalAda backend
+      , _dumpBlockRange     = testDumpBlockRange backend
+      , _blocksPages        = testBlocksPages backend
+      , _blocksPagesTotal   = getBlocksPagesTotal backend
+      , _blocksSummary      = blocksSummary backend
+      , _blocksTxs          = getBlockTxs backend
+      , _txsLast            = getLastTxs backend
+      , _txsSummary         = testTxsSummary backend
+      , _addressSummary     = testAddressSummary backend
+      , _addressUtxoBulk    = testAddressUtxoBulk backend
+      , _epochPages         = testEpochPageSearch backend
+      , _epochSlots         = testEpochSlotSearch backend
+      , _genesisSummary     = testGenesisSummary backend
+      , _genesisPagesTotal  = testGenesisPagesTotal backend
+      , _genesisAddressInfo = testGenesisAddressInfo backend
+      , _statsTxs           = testStatsTxs backend
+      } :: ExplorerApiRecord (AsServerT Handler)
+    newHandlers = ExplorerApi1Record
+      { _utxoHeight         = getUtxoSnapshotHeight backend
+      , _utxoHash           = getUtxoSnapshotHash
+      } :: ExplorerApi1Record (AsServerT Handler)
 
 --------------------------------------------------------------------------------
 -- sample data --
@@ -424,3 +434,29 @@ testStatsTxs
     :: SqlBackend -> Maybe Word
     -> Handler (Either ExplorerError TxsStats)
 testStatsTxs _backend _ = pure $ Right (1, [(cTxId, 200)])
+
+getUtxoSnapshotHeight :: SqlBackend -> Maybe Word64 -> Handler (Either ExplorerError [V1Utxo])
+getUtxoSnapshotHeight backend mHeight = runExceptT $ do
+  liftIO $ putStrLn "getting snapshot by height"
+  outputs <- ExceptT <$> runQuery backend $ do
+    mBlkid <- case mHeight of
+      Just height -> queryBlockIdFromHeight height
+      Nothing -> queryLatestBlockId
+    case mBlkid of
+      Just blkid -> Right <$> queryUtxoSnapshot blkid
+      Nothing -> pure $ Left $ Internal "block not found at given height"
+  let
+    convertRow :: (TxOut, BS.ByteString) -> V1Utxo
+    convertRow (txout, txhash) = V1Utxo
+      { API1.cuId = (CTxHash . CHash . bytestringToText) txhash
+      , API1.cuOutIndex = txOutIndex txout
+      , API1.cuAddress = (CAddress . txOutAddress) txout
+      , API1.cuCoins = (mkCCoin . fromIntegral . txOutValue) txout
+      }
+  pure $ map convertRow outputs
+
+getUtxoSnapshotHash :: Maybe CHash -> Handler (Either ExplorerError [V1Utxo])
+getUtxoSnapshotHash _ = runExceptT $ do
+  liftIO $ putStrLn "getting snapshot by hash"
+  -- queryBlockId
+  pure []
