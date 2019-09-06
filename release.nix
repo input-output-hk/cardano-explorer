@@ -24,10 +24,10 @@
 
 # Import IOHK common nix lib
 # TODO: remove line below, and uncomment the next line
-, iohkLib ? import ./lib.nix {}
+, commonLib ? import ./lib.nix {}
 }:
 
-with (import iohkLib.release-lib) {
+with (import commonLib.release-lib) {
   inherit (import ./lib.nix {}) pkgs;
 
   inherit supportedSystems supportedCrossSystems scrubJobs projectArgs;
