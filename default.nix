@@ -71,8 +71,6 @@ in {
   tests = util.collectComponents "tests" util.isIohkSkeleton haskellPackages;
   benchmarks = util.collectComponents "benchmarks" util.isIohkSkeleton haskellPackages;
 
-  # scripts.exporter = commonLib.cardanoLib.forEnvironments mkConnectScript;
-
   # This provides a development environment that can be used with nix-shell or
   # lorri. See https://input-output-hk.github.io/haskell.nix/user-guide/development/
   shell = haskellPackages.shellFor {
