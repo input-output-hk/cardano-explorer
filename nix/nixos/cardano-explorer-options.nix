@@ -1,9 +1,8 @@
 { config, lib, pkgs, ... }:
 
 let
-  commonLib = import ../../lib.nix { };
-  inherit (commonLib) environments;
-  inherit (commonLib.pkgs.lib) types mkOption;
+  inherit (import ../../lib.nix { }) environments;
+  inherit (lib) types mkOption;
 
   cfg = config.services.cardano-exporter;
   envConfig = environments.${cfg.environment};
@@ -46,7 +45,7 @@ in {
       type = types.int;
       default = 60 * 30;
       description = ''
-        The directory containing the migrations.
+        Amount of seconds to wait for the cardano-node socket to appear.
       '';
     };
 

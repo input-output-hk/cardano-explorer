@@ -9,16 +9,13 @@ in {
   in {
     networking.firewall.allowedTCPPorts = [ 3001 8100 ];
 
-    users.groups.${cfg.group}.gid = 10017;
-
     users.users.${cfg.user} = {
       description = "cardano-explorer daemon user";
-      uid = 10017;
       group = cfg.group;
     };
 
     systemd.services = {
-      cardano-explorer-node = {
+      cardano-explorer = {
         description = "cardano-explorer node";
         wantedBy = [ "multi-user.target" ];
         after = [ "postgresql.service" ];
@@ -38,24 +35,6 @@ in {
           WorkingDirectory = cfg.stateDir;
         };
         environment.PGPASSFILE = __toFile "pgpass" "/tmp:5432:cexplorer:*:*";
-        script = ''
-          ${cardano-explorer}/bin/cardano-explorer
-        '';
-      };
-
-      cardano-explorer-webapi = {
-        description = "cardano-explorer web API";
-        wantedBy = [ "multi-user.target" ];
-        after = [ "postgresql.service" "cardano-explorer-node" ];
-        environment.PGPASSFILE = __toFile "pgpass" "/tmp:5432:cexplorer:*:*";
-        serviceConfig = {
-          PermissionsStartOnly = "true";
-          User = cfg.user;
-          Group = cfg.group;
-          StateDirectory = removePrefix stateDirBase cfg.stateDir;
-          WorkingDirectory = cfg.stateDir;
-        };
-
         script = ''
           ${cardano-explorer}/bin/cardano-explorer
         '';
