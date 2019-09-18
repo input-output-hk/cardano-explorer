@@ -32,6 +32,7 @@ library
                         -Wno-safe
                         -Wno-unsafe
                         -Wno-implicit-prelude
+                        -Wno-all-missed-specialisations
 
   exposed-modules:      Explorer.Web
                       , Explorer.Web.Api
@@ -105,6 +106,8 @@ test-suite test
   main-is:              test.hs
   hs-source-dirs:       test
 
+  other-modules:        Test.IO.Explorer.Web.Query
+
   ghc-options:          -Wall
                         -Werror
                         -Wcompat
@@ -115,4 +118,12 @@ test-suite test
                         -Wincomplete-uni-patterns
 
   build-depends:        base                            >= 4.12         && < 4.13
+                      , bytestring
                       , cardano-explorer
+                      , cardano-explorer-db
+                      , monad-logger
+                      , persistent-postgresql
+                      , tasty
+                      , tasty-hunit
+                      , text
+                      , transformers

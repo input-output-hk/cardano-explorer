@@ -30,6 +30,7 @@ library
                         -Wincomplete-uni-patterns
 
   exposed-modules:      Explorer.DB
+                        Test.IO.Explorer.DB.Util
 
   other-modules:        Explorer.DB.Delete
                         Explorer.DB.Error
@@ -124,7 +125,6 @@ test-suite test-db
                         Test.IO.Explorer.DB.Migration
                         Test.IO.Explorer.DB.Rollback
                         Test.IO.Explorer.DB.TotalSupply
-                        Test.IO.Explorer.DB.Util
 
   ghc-options:          -Wall
                         -Wcompat
