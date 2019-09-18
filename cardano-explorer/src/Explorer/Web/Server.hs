@@ -52,6 +52,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base16      as B16
 import qualified Data.ByteString.Char8       as SB8
 import qualified Data.Text                   as T
+import           Data.Text.Encoding (decodeUtf8)
 import           Data.Time                   (defaultTimeLocale, addUTCTime, parseTimeOrError)
 import           Data.Time.Clock.POSIX       (POSIXTime, utcTimeToPOSIXSeconds)
 import           Data.Word                   (Word16, Word64)
@@ -194,10 +195,7 @@ hexToBytestring :: T.Text -> ExceptT ExplorerError Handler BS.ByteString
 hexToBytestring text = do
   case B16.decode (SB8.pack (T.unpack text)) of
     (blob, "") -> pure blob
-    _ -> throwE $ Internal "cant parse hex"
-
-bytestringToText :: BS.ByteString -> T.Text
-bytestringToText = T.pack . SB8.unpack . B16.encode
+    (_partial, remain) -> throwE $ Internal $ "cant parse " <> (decodeUtf8 remain) <> " as hex"
 
 blocksSummary
     :: SqlBackend -> CHash
@@ -218,7 +216,7 @@ blocksSummary backend (CHash blkHashTxt) = runExceptT $ do
                , cbeSlot = fromIntegral slot
                -- Use '0' for EBBs.
                , cbeBlkHeight = maybe 0 fromIntegral $ blockBlockNo blk
-               , cbeBlkHash = (CHash . bytestringToText . blockHash) blk
+               , cbeBlkHash = (CHash . decodeUtf8 . blockHash) blk
                , cbeTimeIssued = Nothing
                , cbeTxNum = txCount
                , cbeTotalSent = adaToCCoin totalOut
@@ -226,9 +224,9 @@ blocksSummary backend (CHash blkHashTxt) = runExceptT $ do
                , cbeBlockLead = Nothing
                , cbeFees = adaToCCoin fees
                }
-            , cbsPrevHash = (CHash . bytestringToText) prevHash
-            , cbsNextHash = fmap (CHash . bytestringToText) nextHash
-            , cbsMerkleRoot = CHash $ maybe "" bytestringToText (blockMerkelRoot blk)
+            , cbsPrevHash = (CHash . decodeUtf8) prevHash
+            , cbsNextHash = fmap (CHash . decodeUtf8) nextHash
+            , cbsMerkleRoot = CHash $ maybe "" decodeUtf8 (blockMerkelRoot blk)
             }
         Nothing -> throwE $ Internal "slot missing"
     _ -> throwE $ Internal "No block found"
@@ -259,7 +257,7 @@ getBlockTxs backend (CHash blkHashTxt) mLimit mOffset = runExceptT $ do
       let
         txToTxBrief :: TxWithInputsOutputs -> CTxBrief
         txToTxBrief TxWithInputsOutputs{txwTx,txwInputs,txwOutputs} = CTxBrief
-          { ctbId = (CTxHash . CHash . bytestringToText . txHash) txwTx
+          { ctbId = (CTxHash . CHash . decodeUtf8 . txHash) txwTx
           , ctbTimeIssued = (\slot -> utcTimeToPOSIXSeconds $ (0.001 * fromIntegral (slot * metaSlotDuration)) `addUTCTime` metaStartTime) <$> mSlot
           , ctbInputs = map convertInput txwInputs
           , ctbOutputs = map convertTxOut txwOutputs
@@ -286,13 +284,13 @@ testTxsSummary backend (CTxHash (CHash cTxHash)) = runExceptT $ do
           let
             (epoch, slot) = divMod slotno epochLenght
           pure $ CTxSummary
-            { ctsId              = (CTxHash . CHash . bytestringToText . txHash) tx
+            { ctsId              = (CTxHash . CHash . decodeUtf8 . txHash) tx
             , ctsTxTimeIssued    = Just posixTime
             , ctsBlockTimeIssued = Nothing
             , ctsBlockHeight     = fromIntegral <$> blockBlockNo blk
             , ctsBlockEpoch      = Just epoch
             , ctsBlockSlot       = Just $ fromIntegral slot
-            , ctsBlockHash       = (Just . CHash . bytestringToText . blockHash) blk
+            , ctsBlockHash       = (Just . CHash . decodeUtf8 . blockHash) blk
             , ctsRelayedBy       = Nothing
             , ctsTotalInput      = (mkCCoin . sum . map (\(_addr,coin) -> fromIntegral  coin)) inputs
             , ctsTotalOutput     = (mkCCoin . sum . map (fromIntegral . txOutValue)) outputs
@@ -448,7 +446,7 @@ getUtxoSnapshotHeight backend mHeight = runExceptT $ do
   let
     convertRow :: (TxOut, BS.ByteString) -> V1Utxo
     convertRow (txout, txhash) = V1Utxo
-      { API1.cuId = (CTxHash . CHash . bytestringToText) txhash
+      { API1.cuId = (CTxHash . CHash . decodeUtf8) txhash
       , API1.cuOutIndex = txOutIndex txout
       , API1.cuAddress = (CAddress . txOutAddress) txout
       , API1.cuCoins = (mkCCoin . fromIntegral . txOutValue) txout

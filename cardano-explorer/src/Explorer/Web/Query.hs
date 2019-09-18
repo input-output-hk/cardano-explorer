@@ -164,29 +164,34 @@ data TxWithInputsOutputs = TxWithInputsOutputs
 
 queryBlockTxs :: MonadIO m => ByteString -> Int64 -> Int64 -> ReaderT SqlBackend m ([ TxWithInputsOutputs ], Maybe Word64)
 queryBlockTxs blkHash limitNum offsetNum = do
-  let
+    maybeSlotNo <- select . from $ \blk -> do
+      where_ (blk ^. BlockHash ==. val blkHash)
+      pure $ blk ^. BlockSlotNo
+    res <- select . from $ \tx -> do
+      where_ (tx ^. TxBlock `in_` blockid)
+      limit limitNum
+      offset offsetNum
+      pure tx
+    let txids = map entityKey res
+    --inputs <- select . from $ \txin -> do
+    --  where_ (txin ^. TxInTxInId `in_` valList txids)
+    --  pure txin
+    outputs <- select . from $ \txout -> do
+      where_ (txout ^. TxOutTxId `in_` valList txids)
+      pure txout
+    case (listToMaybe $ map unValue maybeSlotNo) of
+      Just (Just slot) -> do
+        txs <- mapM (txToTxWith outputs) res
+        pure (txs, Just slot)
+      _ -> do
+        txs <- mapM (txToTxWith outputs) res
+        pure (txs, Nothing)
+  where
     blockid = subList_select . from $ \blk -> do
       where_ (blk ^. BlockHash ==. val blkHash)
       pure $ blk ^. BlockId
-  maybeSlotNo <- select . from $ \blk -> do
-    where_ (blk ^. BlockHash ==. val blkHash)
-    pure $ blk ^. BlockSlotNo
-  res <- select . from $ \tx -> do
-    where_ (tx ^. TxBlock `in_` blockid)
-    limit limitNum
-    offset offsetNum
-    pure tx
-  let
-    txids = map entityKey res
-  --inputs <- select . from $ \txin -> do
-  --  where_ (txin ^. TxInTxInId `in_` valList txids)
-  --  pure txin
-  outputs <- select . from $ \txout -> do
-    where_ (txout ^. TxOutTxId `in_` valList txids)
-    pure txout
-  let
-    txToTxWith :: MonadIO m => Entity Tx -> ReaderT SqlBackend m TxWithInputsOutputs
-    txToTxWith tx = do
+    txToTxWith :: MonadIO m => [Entity TxOut] -> Entity Tx -> ReaderT SqlBackend m TxWithInputsOutputs
+    txToTxWith outputs tx = do
       -- TODO, use the commented out inputs query above?
       inputs <- queryGetInputOutputs (entityKey tx)
       pure $ TxWithInputsOutputs
@@ -195,13 +200,6 @@ queryBlockTxs blkHash limitNum offsetNum = do
         , txwInputs = inputs
         , txwOutputs = filter (\txout -> (txOutTxId txout) == (entityKey tx)) (map entityVal outputs)
         }
-  case (listToMaybe $ map unValue maybeSlotNo) of
-    Just (Just slot) -> do
-      txs <- mapM txToTxWith res
-      pure (txs, Just slot)
-    _ -> do
-      txs <- mapM txToTxWith res
-      pure (txs, Nothing)
 
 queryBlockIdFromHeight :: MonadIO m => Word64 -> ReaderT SqlBackend m (Maybe BlockId)
 queryBlockIdFromHeight height = do
