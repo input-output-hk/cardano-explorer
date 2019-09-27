@@ -12,6 +12,10 @@ in {
         internal = true;
         type = lib.types.package;
       };
+      pgpass = lib.mkOption {
+        type = lib.types.path;
+        internal = true;
+      };
       genesisHash = lib.mkOption {
         type = lib.types.str;
       };
@@ -107,6 +111,7 @@ in {
         wantedBy = [ "multi-user.target" ];
       };
       services.cardano-exporter = {
+        inherit pgpass;
         script = pkgs.writeScript "cardano-exporter-${cfg.cluster}" ''
           #!${pkgs.stdenv.shell}
 

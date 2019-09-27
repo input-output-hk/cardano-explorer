@@ -1,6 +1,14 @@
 { forDockerFile ? false }:
 
 let
+  rawNixpkgs = builtins.fetchTarball "https://github.com/nixos/nixpkgs/archive/d484f2b7fc0834a068e8ace851faa449a03963f5.tar.gz";
+  helperPkgs = import rawNixpkgs { config = {}; overlays = []; };
+  patchedNixpkgs = helperPkgs.runCommand "nixpkgs-patched" { patches = [ ./nixpkgs.patch ]; } ''
+    cp -r ${rawNixpkgs} $out
+    chmod -R +w $out
+    cd $out
+    patchPhase
+  '';
   overlay = self: super: {
     deroot = self.runCommandCC "deroot" {} ''
       mkdir -pv $out/bin/
@@ -8,11 +16,12 @@ let
     '';
   };
 in
-with import <nixpkgs> { overlays = [ overlay ]; };
+with import patchedNixpkgs { overlays = [ overlay ]; };
 
 let
   secrets = import ./secrets.nix;
   iohkLib = import ../lib.nix { };
+  self = import ../. {};
   targetEnv = iohkLib.cardanoLib.environments.mainnet;
   iohk-ops-src = fetchFromGitHub {
     owner = "input-output-hk";
@@ -78,7 +87,7 @@ let
     services.prometheus.scrapeConfigs = [
       {
         job_name = "postgres";
-        scrape_interval = "60s";
+        scrape_interval = "10s";
         metrics_path = "/metrics";
         static_configs = [
           {
@@ -119,7 +128,7 @@ let
       };
     };
   };
-  eval = import <nixpkgs/nixos> { inherit configuration; };
+  eval = import "${patchedNixpkgs}/nixos" { inherit configuration; };
   patchedRunit = runit.overrideAttrs (old: {
     patches = old.patches ++ [ ./runit.patch ];
   });
@@ -302,6 +311,10 @@ let
     chmod u+x /etc/runit/stopit
     kill -cont 1
   '';
+  web-api = mkService "web-api" ''
+    export PGPASSFILE=${eval.config.services.cardano-exporter.pgpass}
+    ${self.cardano-explorer}/bin/cardano-explorer
+  '';
   wrapService = name: mkService name ''
     exec ${eval.config.systemd.services.${name}.runner}
   '';
@@ -312,6 +325,7 @@ let
       #(wrapService "prometheus-blackbox-exporter")
       #(wrapService "prometheus-node-exporter")
       #sleeper
+      web-api
       (wrapService "postgresql")
       (wrapService "prometheus")
       (wrapService "oauth2_proxy")
@@ -361,7 +375,7 @@ let
     #!${pkgs.stdenv.shell}
     set -e
     docker load < ${image}
-    docker run --rm -i -p 80:80 --tty --cap-add SYS_PTRACE --name test-image docker-image:test-image
+    docker run --rm -i -p 80:80 --tty --cap-add SYS_PTRACE --name test-image --volume explorer-mainnet:/var/ docker-image:test-image
   '';
 in {
   inherit image helper configFiles;
