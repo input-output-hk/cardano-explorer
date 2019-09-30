@@ -48,11 +48,29 @@ let
       ];
     };
   };
+  oauth_configuration = {
+    services.oauth2_proxy = {
+      redirectURL = "http://localhost.earthtools.ca/oauth2/callback";
+      cookie.secure = false;
+    };
+    services.monitoring-services = {
+      oauth = {
+        enable = true;
+        emailDomain = "iohk.io";
+        inherit (secrets) clientID clientSecret;
+        cookie.secret = "fake";
+      };
+    };
+  };
+  noauth_configuration = {
+    services.monitoring-services.oauth.enable = false;
+  };
   configuration = { config, ... }: {
     imports = [
       (iohk-ops-src + "/modules/monitoring-services.nix")
       ../nix/nixos/cardano-exporter-service.nix
       (cardano-node-src + "/nix/nixos")
+      (if builtins.pathExists ./secrets.nix then oauth_configuration else noauth_configuration)
     ];
     services.cardano-node = {
       environment = "mainnet";
@@ -63,10 +81,6 @@ let
       inherit (targetEnv) genesisFile genesisHash;
       cluster = "mainnet";
       socketPath = "/run/cardano-node/node-core-0.socket";
-    };
-    services.oauth2_proxy = {
-      redirectURL = "http://localhost.earthtools.ca/oauth2/callback";
-      cookie.secure = false;
     };
     services.postgresql = {
       enable = true;
@@ -103,12 +117,6 @@ let
       enableWireguard = false;
       metrics = true;
       logging = false;
-      oauth = {
-        enable = true;
-        emailDomain = "iohk.io";
-        inherit (secrets) clientID clientSecret;
-        cookie.secret = "fake";
-      };
       webhost = "localhost.earthtools.ca";
       grafanaAutoLogin = true;
       grafanaCreds = {
@@ -328,13 +336,12 @@ let
       web-api
       (wrapService "postgresql")
       (wrapService "prometheus")
-      (wrapService "oauth2_proxy")
       (wrapService "nginx")
       (wrapService "grafana")
       (wrapService "cardano-explorer-node")
       (wrapService "cardano-node")
       (wrapService "prometheus-postgres-exporter")
-    ];
+    ] ++ (lib.optional (builtins.pathExists ./secrets.nix) (wrapService "oauth2_proxy"));
   };
   dockerFileBinaries = buildEnv {
     name = "binaries";
