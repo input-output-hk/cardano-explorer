@@ -98,6 +98,18 @@ let
         (builtins.toFile "queries.yaml" (builtins.toJSON customQueries))
       ];
     };
+    services.nginx = {
+      virtualHosts.${config.services.monitoring-services.webhost} = {
+        default = true;
+        locations."/api/".extraConfig = ''
+          proxy_pass http://localhost:8100/api/;
+          proxy_set_header Host $host;
+          proxy_set_header REMOTE_ADDR $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Proto $scheme;
+        '';
+      };
+    };
     services.prometheus.scrapeConfigs = [
       {
         job_name = "postgres";
