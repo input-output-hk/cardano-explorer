@@ -12,6 +12,7 @@
 
 module Explorer.Node.Insert
   ( insertByronBlockOrEBB
+  , insertManyByronBlockOrEBB
   , insertValidateGenesisDistribution
   ) where
 
@@ -44,21 +45,33 @@ import           Explorer.Node.Util
 import           Ouroboros.Consensus.Ledger.Byron (ByronBlockOrEBB (..))
 import           Ouroboros.Network.Block (BlockNo (..))
 
-insertByronBlockOrEBB :: MonadIO m => Trace IO Text -> ByronBlockOrEBB cfg -> BlockNo -> m ()
-insertByronBlockOrEBB tracer blk tipBlockNo =
-  liftIO $ case unByronBlockOrEBB blk of
-            Ledger.ABOBBlock ablk -> insertABlock tracer ablk tipBlockNo
-            Ledger.ABOBBoundary abblk -> insertABOBBoundary tracer abblk
-
-insertABOBBoundary :: Trace IO Text -> Ledger.ABoundaryBlock ByteString -> IO ()
-insertABOBBoundary tracer blk = do
+insertByronBlockOrEBB :: Trace IO Text -> ByronBlockOrEBB cfg -> BlockNo -> IO ()
+insertByronBlockOrEBB tracer blk tipBlockNo = do
     -- Setting this to True will log all 'Persistent' operations which is great
     -- for debugging, but otherwise *way* too chatty.
     if False
-      then DB.runDbIohkLogging tracer insertAction
-      else DB.runDbNoLogging insertAction
+      then DB.runDbIohkLogging tracer (insertByronBlockOrEBBRaw tracer (blk, tipBlockNo))
+      else DB.runDbNoLogging (insertByronBlockOrEBBRaw tracer (blk, tipBlockNo))
 
-    logInfo tracer $ Text.concat
+insertManyByronBlockOrEBB :: Trace IO Text -> [ (ByronBlockOrEBB cfg, BlockNo) ] -> IO ()
+insertManyByronBlockOrEBB tracer blks = do
+    -- Setting this to True will log all 'Persistent' operations which is great
+    -- for debugging, but otherwise *way* too chatty.
+    if False
+      then DB.runDbIohkLogging tracer $ mapM_ (insertByronBlockOrEBBRaw tracer) blks
+      else DB.runDbNoLogging $ mapM_ (insertByronBlockOrEBBRaw tracer) blks
+
+insertByronBlockOrEBBRaw :: MonadIO m => Trace IO Text -> (ByronBlockOrEBB cfg, BlockNo) -> ReaderT SqlBackend m ()
+insertByronBlockOrEBBRaw tracer (blk, tipBlockNo) =
+  case unByronBlockOrEBB blk of
+            Ledger.ABOBBlock ablk -> insertABlock tracer ablk tipBlockNo
+            Ledger.ABOBBoundary abblk -> insertABOBBoundary tracer abblk
+
+insertABOBBoundary :: MonadIO m => Trace IO Text -> Ledger.ABoundaryBlock ByteString -> ReaderT SqlBackend m ()
+insertABOBBoundary tracer blk = do
+    insertAction
+
+    liftIO $ logInfo tracer $ Text.concat
                     [ "insertABOBBoundary: epoch "
                     , textShow (Ledger.boundaryEpoch $ Ledger.boundaryHeader blk)
                     , " hash "
@@ -92,15 +105,11 @@ insertABOBBoundary tracer blk = do
                     , " is ", DB.renderAda supply, " Ada"
                     ]
 
-insertABlock :: Trace IO Text -> Ledger.ABlock ByteString -> BlockNo -> IO ()
+insertABlock :: MonadIO m => Trace IO Text -> Ledger.ABlock ByteString -> BlockNo -> ReaderT SqlBackend m ()
 insertABlock tracer blk (BlockNo tipBlockNo) = do
-    -- Setting this to True will log all 'Persistent' operations which is great
-    -- for debug, but otherwise *way* too chatty.
-    if False
-      then DB.runDbIohkLogging tracer insertAction
-      else DB.runDbNoLogging insertAction
+    insertAction
 
-    logger tracer $ mconcat
+    liftIO $ logger tracer $ mconcat
                     [ "insertABlock: slot ", textShow (slotNumber blk)
                     , ", block ", textShow (blockNumber blk)
                     , ", hash ", renderAbstractHash (blockHash blk)
