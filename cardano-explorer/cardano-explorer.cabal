@@ -34,8 +34,7 @@ library
                         -Wno-implicit-prelude
                         -Wno-all-missed-specialisations
 
-  exposed-modules:      Explorer.Web
-                      , Explorer.Web.Api
+  exposed-modules:      Explorer.Web.Api
                       , Explorer.Web.ClientTypes
                       , Explorer.Web.Error
                       , Explorer.Web.LegacyApi

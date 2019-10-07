@@ -1,4 +1,4 @@
-FROM ubuntu
+FROM ubuntu:18.04
 
 RUN apt-get update
 RUN apt-get install -y sudo bzip2 curl git xz-utils

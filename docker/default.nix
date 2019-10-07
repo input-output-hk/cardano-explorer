@@ -32,8 +32,8 @@ let
   cardano-node-src = fetchFromGitHub {
     owner = "input-output-hk";
     repo = "cardano-node";
-    rev = "eb3654f11ff79956a201e10f4afb985bae143bbd";
-    sha256 = "19bjpfgh8ys505z950likgsyr2wvpw0wpxsmbzlwxq8skw0wdkxv";
+    rev = "b475810273bbf158632bb273575df398ecbed240";
+    sha256 = "1f7xphv7na7qbzdm1z27aqsdkxn6zgl2hqkkyznv3nhhr311267b";
   };
   customQueries = {
     cexplorerBlockCount = {
@@ -48,22 +48,33 @@ let
       ];
     };
   };
-  oauth_configuration = {
+  oauth_configuration = let
+    secrets = import ./secrets.nix;
+  in {
     services.oauth2_proxy = {
-      redirectURL = "http://localhost.earthtools.ca/oauth2/callback";
+      inherit (secrets) redirectURL;
       cookie.secure = false;
     };
     services.monitoring-services = {
+      grafanaCreds = {
+        inherit (secrets) user;
+        password = "admin";
+      };
       oauth = {
         enable = true;
-        emailDomain = "iohk.io";
-        inherit (secrets) clientID clientSecret;
+        inherit (secrets) clientID clientSecret emailDomain;
         cookie.secret = "fake";
       };
     };
   };
   noauth_configuration = {
-    services.monitoring-services.oauth.enable = false;
+    services.monitoring-services = {
+      oauth.enable = false;
+      grafanaCreds = {
+        user = "admin";
+        password = "admin";
+      };
+    };
   };
   configuration = { config, ... }: {
     imports = [
@@ -74,6 +85,7 @@ let
     ];
     services.cardano-node = {
       environment = "mainnet";
+      topology = iohkLib.cardanoLib.mkEdgeTopology { edgeHost = iohkLib.cardanoLib.environments.mainnet.edgeHost; edgePort = 7777; };
       enable = true;
     };
     services.cardano-exporter = {
@@ -112,6 +124,16 @@ let
     };
     services.prometheus.scrapeConfigs = [
       {
+        job_name = "exporter";
+        scrape_interval = "10s";
+        metrics_path = "/";
+        static_configs = [
+          {
+            targets = [ "localhost:8080" ];
+          }
+        ];
+      }
+      {
         job_name = "postgres";
         scrape_interval = "10s";
         metrics_path = "/metrics";
@@ -131,10 +153,6 @@ let
       logging = false;
       webhost = "localhost.earthtools.ca";
       grafanaAutoLogin = true;
-      grafanaCreds = {
-        user = "michael.bishop@iohk.io";
-        password = "hunter2";
-      };
       monitoredNodes = {
       };
     };

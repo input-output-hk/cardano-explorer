@@ -54,21 +54,23 @@ library
                       , cryptonite
                       , extra
                       , formatting
-                      , optparse-applicative
-                      , ouroboros-consensus
                       , io-sim-classes
                       , iohk-monitoring
                       , memory
                       , monad-logger
+                      , optparse-applicative
                       , network
+                      , ouroboros-consensus
                       , ouroboros-network
                       , persistent
-                      , text
-                      , typed-protocols
+                      , prometheus
                       , reflection
                       , serialise
+                      , stm
+                      , text
                       , time
                       , transformers
+                      , typed-protocols
                       , typed-protocols-cbor
 
 executable cardano-explorer-node
