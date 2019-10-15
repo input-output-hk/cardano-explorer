@@ -128,13 +128,13 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/input-output-hk/cardano-node
-  tag: 8128dceddbb9074f5b25ca01728613cac4360298
+  tag: 813ddac7a6fa4705900ed59c0e31ffa3cb0bb491
   subdir: cardano-node
 
 source-repository-package
   type: git
   location: https://github.com/input-output-hk/cardano-node
-  tag: 8128dceddbb9074f5b25ca01728613cac4360298
+  tag: 813ddac7a6fa4705900ed59c0e31ffa3cb0bb491
   subdir: cardano-config
 
 source-repository-package
@@ -182,35 +182,35 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/input-output-hk/ouroboros-network
-  tag: e3a2401aa324afe1287c89d827a92f2e784a3da0
+  tag: cf229ea896f328a0a7e388c940a417a0273e4166
   subdir: io-sim-classes
 
 source-repository-package
   type: git
   location: https://github.com/input-output-hk/ouroboros-network
-  tag: e3a2401aa324afe1287c89d827a92f2e784a3da0
+  tag: cf229ea896f328a0a7e388c940a417a0273e4166
   subdir: network-mux
 
 source-repository-package
   type: git
   location: https://github.com/input-output-hk/ouroboros-network
-  tag: e3a2401aa324afe1287c89d827a92f2e784a3da0
+  tag: cf229ea896f328a0a7e388c940a417a0273e4166
   subdir: ouroboros-network
 
 source-repository-package
   type: git
   location: https://github.com/input-output-hk/ouroboros-network
-  tag: e3a2401aa324afe1287c89d827a92f2e784a3da0
+  tag: cf229ea896f328a0a7e388c940a417a0273e4166
   subdir: ouroboros-consensus
 
 source-repository-package
   type: git
   location: https://github.com/input-output-hk/ouroboros-network
-  tag: e3a2401aa324afe1287c89d827a92f2e784a3da0
+  tag: cf229ea896f328a0a7e388c940a417a0273e4166
   subdir: typed-protocols
 
 source-repository-package
   type: git
   location: https://github.com/input-output-hk/ouroboros-network
-  tag: e3a2401aa324afe1287c89d827a92f2e784a3da0
+  tag: cf229ea896f328a0a7e388c940a417a0273e4166
   subdir: typed-protocols-cbor
