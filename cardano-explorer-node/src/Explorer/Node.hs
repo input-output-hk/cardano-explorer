@@ -30,15 +30,13 @@ import           Cardano.BM.Trace (Trace, appendName, logInfo)
 import qualified Cardano.Chain.Genesis as Genesis
 import qualified Cardano.Chain.Update as Update
 
-import           Cardano.Config.CommonCLI (CommonCLI (..))
-import qualified Cardano.Config.CommonCLI as Config
-import           Cardano.Config.Logging (LoggingLayer, LoggingCLIArguments,
+import           Cardano.Config.Logging (LoggingLayer,
                     createLoggingFeature, llAppendName, llBasicTrace)
 import qualified Cardano.Config.Partial as Config
 import qualified Cardano.Config.Presets as Config
-import           Cardano.Config.Types (CardanoConfiguration, CardanoEnvironment (..),
+import           Cardano.Config.Types (CardanoConfiguration(..), CardanoEnvironment (..),
                     RequireNetworkMagic (..),
-                    coRequiresNetworkMagic, ccCore)
+                    coRequiresNetworkMagic, ccCore, coGenesisFile, coGenesisHash)
 
 import           Cardano.Crypto (RequiresNetworkMagic (..), decodeAbstractHash)
 import           Cardano.Crypto.Hashing (AbstractHash (..))
@@ -46,8 +44,7 @@ import           Cardano.Crypto.Hashing (AbstractHash (..))
 import           Cardano.Prelude hiding (atomically, option, (%), Nat)
 import           Cardano.Shell.Lib (GeneralException (ConfigurationError))
 import           Cardano.Shell.Types (CardanoFeature (..),
-                    CardanoFeatureInit (..), featureCleanup, featureInit,
-                    featureShutdown, featureStart, featureType)
+                    featureShutdown, featureStart)
 
 import qualified Codec.Serialise as Serialise
 import           Crypto.Hash (digestFromByteString)
@@ -58,8 +55,7 @@ import           Data.Reflection (give)
 import           Data.Text (Text)
 import qualified Data.Text as Text
 
-
-import           Explorer.DB (LogFileDir (..), MigrationDir)
+import           Explorer.DB (LogFileDir (..), MigrationDir(..))
 import qualified Explorer.DB as DB
 import           Explorer.Node.Database
 import           Explorer.Node.Insert
@@ -109,14 +105,7 @@ import qualified System.Metrics.Prometheus.Metric.Gauge as Gauge
 data Peer = Peer SockAddr SockAddr deriving Show
 
 -- | The product type of all command line arguments
-data ExplorerNodeParams = ExplorerNodeParams
-  { enpLogging :: !LoggingCLIArguments
-  , enpGenesisHash :: !Text
-  , enpGenesisFile :: !GenesisFile
-  , enpSocketPath :: !SocketPath
-  , enpMigrationDir :: !MigrationDir
-  , enpCommonCLIAdvanced :: !Config.CommonCLIAdvanced
-  }
+data ExplorerNodeParams = ExplorerNodeParams Config.PartialCardanoConfiguration
 
 newtype GenesisFile = GenesisFile
   { unGenesisFile :: FilePath
@@ -130,13 +119,9 @@ newtype NodeLayer = NodeLayer
   { nlRunNode :: forall m. MonadIO m => m ()
   }
 
-type NodeCardanoFeature
-  = CardanoFeatureInit CardanoEnvironment LoggingLayer CardanoConfiguration ExplorerNodeParams NodeLayer
-
 initializeAllFeatures :: ExplorerNodeParams -> IO ([CardanoFeature], NodeLayer)
-initializeAllFeatures enp = do
-  DB.runMigrations Prelude.id True (enpMigrationDir enp) (LogFileDir "/tmp")
-  let fcc = Config.mkCardanoConfiguration $ Config.mergeConfiguration Config.mainnetConfiguration commonCli (enpCommonCLIAdvanced enp)
+initializeAllFeatures (ExplorerNodeParams pcc) = do
+  let fcc = Config.mkCardanoConfiguration $ Config.mainnetConfiguration <> pcc
   finalConfig <- case fcc of
                   Left err -> throwIO err
                   --TODO: if we're using exceptions for this, then we should use a local
@@ -144,66 +129,49 @@ initializeAllFeatures enp = do
                   -- are reporting, and has proper formatting of the result.
                   -- It would also require catching at the top level and printing.
                   Right x  -> pure x
-
+  DB.runMigrations Prelude.id True (MigrationDir $ ccMigrationDir finalConfig) (LogFileDir "/tmp")
   (loggingLayer, loggingFeature) <- createLoggingFeature NoEnvironment finalConfig
-  (nodeLayer   , nodeFeature)    <- createNodeFeature loggingLayer enp finalConfig
+  (nodeLayer   , nodeFeature)    <- createNodeFeature loggingLayer finalConfig
 
   pure ([ loggingFeature, nodeFeature ], nodeLayer)
 
--- This is a bit of a pain in the neck but is needed for using cardano-cli.
-commonCli ::CommonCLI
-commonCli =
-  CommonCLI
-    { Config.cliSocketDir = Last Nothing
-    , Config.cliGenesisFile = Last Nothing
-    , Config.cliGenesisHash = Last Nothing
-    , Config.cliStaticKeySigningKeyFile = Last Nothing
-    , Config.cliStaticKeyDlgCertFile = Last Nothing
-    , Config.cliDBPath = Last Nothing
-    }
-
-createNodeFeature :: LoggingLayer -> ExplorerNodeParams -> CardanoConfiguration -> IO (NodeLayer, CardanoFeature)
-createNodeFeature loggingLayer enp cardanoConfiguration = do
+createNodeFeature :: LoggingLayer -> CardanoConfiguration -> IO (NodeLayer, CardanoFeature)
+createNodeFeature loggingLayer cardanoConfiguration = do
   -- we parse any additional configuration if there is any
   -- We don't know where the user wants to fetch the additional configuration from, it could be from
   -- the filesystem, so we give him the most flexible/powerful context, @IO@.
 
   -- we construct the layer
-  nodeLayer <- featureInit nodeCardanoFeatureInit NoEnvironment loggingLayer cardanoConfiguration enp
+
+  nodeLayer <- createNodeLayer NoEnvironment loggingLayer cardanoConfiguration
+
+  -- Construct the cardano feature
+  let cardanoFeature :: CardanoFeature
+      cardanoFeature =
+       CardanoFeature
+         { featureName = "NodeFeature"
+         , featureStart = void $ pure nodeLayer
+         , featureShutdown = pure ()
+         }
 
   -- Return both
-  pure (nodeLayer, nodeCardanoFeature nodeCardanoFeatureInit nodeLayer)
+  pure (nodeLayer, cardanoFeature)
+ where
+  createNodeLayer
+    :: CardanoEnvironment
+    -> LoggingLayer
+    -> CardanoConfiguration
+    -> IO NodeLayer
+  createNodeLayer _ logLayer cc =
+        pure $ NodeLayer
+          { nlRunNode = liftIO $ runClient (mkTracer logLayer) cc
+          }
+  mkTracer :: LoggingLayer -> Trace IO Text
+  mkTracer lLayer = llAppendName loggingLayer "explorer-db-node" (llBasicTrace lLayer)
 
-nodeCardanoFeatureInit :: NodeCardanoFeature
-nodeCardanoFeatureInit =
-    CardanoFeatureInit
-      { featureType    = "NodeFeature"
-      , featureInit    = featureStart'
-      , featureCleanup = featureCleanup'
-      }
-  where
-    featureStart' :: CardanoEnvironment -> LoggingLayer -> CardanoConfiguration -> ExplorerNodeParams -> IO NodeLayer
-    featureStart' _ loggingLayer cc enp =
-        pure $ NodeLayer { nlRunNode = liftIO $ runClient enp (mkTracer loggingLayer) cc }
-
-    featureCleanup' :: NodeLayer -> IO ()
-    featureCleanup' _ = pure ()
-
-    mkTracer :: LoggingLayer -> Trace IO Text
-    mkTracer loggingLayer = llAppendName loggingLayer "explorer-db-node" (llBasicTrace loggingLayer)
-
-
-nodeCardanoFeature :: NodeCardanoFeature -> NodeLayer -> CardanoFeature
-nodeCardanoFeature nodeCardanoFeature' nodeLayer =
-  CardanoFeature
-    { featureName       = featureType nodeCardanoFeature'
-    , featureStart      = pure ()
-    , featureShutdown   = liftIO $ (featureCleanup nodeCardanoFeature') nodeLayer
-    }
-
-runClient :: ExplorerNodeParams -> Trace IO Text -> CardanoConfiguration -> IO ()
-runClient enp trce cc = do
-    gc <- readGenesisConfig enp cc
+runClient :: Trace IO Text -> CardanoConfiguration -> IO ()
+runClient trce cc = do
+    gc <- readGenesisConfig cc
 
     -- If the DB is empty it will be inserted, otherwise it will be validated (to make
     -- sure we are on the right chain).
@@ -211,7 +179,7 @@ runClient enp trce cc = do
 
     give (Genesis.configEpochSlots gc)
           $ give (Genesis.gdProtocolMagicId $ Genesis.configGenesisData gc)
-          $ runExplorerNodeClient (mkProtocolId gc) trce (unSocketPath $ enpSocketPath enp)
+          $ runExplorerNodeClient (mkProtocolId gc) trce (ccSocketDir cc)
 
 
 mkProtocolId :: Genesis.Config -> Protocol (ByronBlockOrEBB ByronConfig)
@@ -227,11 +195,11 @@ data GenesisConfigurationError = GenesisConfigurationError Genesis.Configuration
 
 instance Exception GenesisConfigurationError
 
-readGenesisConfig :: ExplorerNodeParams -> CardanoConfiguration -> IO Genesis.Config
-readGenesisConfig enp cc = do
-    genHash <- either (throw . ConfigurationError) pure $ decodeAbstractHash (enpGenesisHash enp)
+readGenesisConfig :: CardanoConfiguration -> IO Genesis.Config
+readGenesisConfig cc = do
+    genHash <- either (throw . ConfigurationError) pure $ decodeAbstractHash (coGenesisHash $ ccCore cc)
     convert =<< runExceptT (Genesis.mkConfigFromFile (convertRNM . coRequiresNetworkMagic $ ccCore cc)
-                            (unGenesisFile $ enpGenesisFile enp) genHash)
+                            (coGenesisFile $ ccCore cc) genHash)
   where
     convert :: Either Genesis.ConfigurationError Genesis.Config -> IO Genesis.Config
     convert =

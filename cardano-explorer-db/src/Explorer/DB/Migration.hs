@@ -43,7 +43,7 @@ import           System.IO (Handle, IOMode (AppendMode), hClose, hFlush, hPrint,
 
 
 newtype MigrationDir
-  = MigrationDir FilePath
+  = MigrationDir { migDir :: FilePath }
 
 newtype LogFileDir
   = LogFileDir FilePath

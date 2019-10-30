@@ -2,16 +2,21 @@
 
 import           Cardano.Prelude
 
-import qualified Cardano.Common.Parsers as Config
-import           Cardano.Config.CommonCLI (parseCommonCLIAdvanced)
+import           Cardano.Common.Parsers (parseLogConfigFile, parseLogMetrics)
+import           Cardano.Config.Partial (PartialCardanoConfiguration (..),
+                                         PartialCore (..), PartialNode (..))
+import           Cardano.Config.CommonCLI (lastOption, parseGenesisHash,
+                                           parseGenesisPath, parseRequireNetworkMagic,
+                                           parsePbftSigThreshold, parseSlotLength,
+                                           parseSocketDir)
+import           Cardano.Config.Types (RequireNetworkMagic)
 import           Cardano.Shell.Types (CardanoApplication (..))
 import qualified Cardano.Shell.Lib as Shell
-
-import qualified Data.Text as Text
+import qualified Ouroboros.Consensus.BlockchainTime as Consensus
 
 import           Explorer.DB (MigrationDir (..))
-import           Explorer.Node (ExplorerNodeParams (..), GenesisFile (..), NodeLayer (..),
-                    SocketPath (..), initializeAllFeatures)
+import           Explorer.Node (ExplorerNodeParams (..), NodeLayer (..),
+                    initializeAllFeatures)
 
 import           Options.Applicative (Parser, ParserInfo)
 import qualified Options.Applicative as Opt
@@ -35,31 +40,59 @@ opts =
     )
 
 pCommandLine :: Parser ExplorerNodeParams
-pCommandLine =
-  ExplorerNodeParams
-    <$> Config.loggingParser
-    <*> pGenesisHash
-    <*> pGenesisFile
-    <*> pSocketPath
-    <*> pMigrationDir
-    <*> parseCommonCLIAdvanced
-
-pGenesisFile :: Parser GenesisFile
-pGenesisFile =
-  GenesisFile <$> Opt.strOption
-    ( Opt.long "genesis-file"
-    <> Opt.help "Path to the genesis JSON file"
-    <> Opt.completer (Opt.bashCompleter "file")
-    <> Opt.metavar "FILEPATH"
-    )
-
-pGenesisHash :: Parser Text
-pGenesisHash =
-  Text.pack <$> Opt.strOption
-    ( Opt.long "genesis-hash"
-    <> Opt.help "The hash of the genesis data"
-    <> Opt.metavar "GENESIS-HASH"
-    )
+pCommandLine = do
+  let pconfig =  createPcc
+                        <$> (lastOption parseLogConfigFile)
+                        <*> parseLogMetrics
+                        <*> parseGenesisHash
+                        <*> parseGenesisPath
+                        <*> parseSocketDir
+                        <*> lastOption (migDir <$> pMigrationDir)
+                        <*> parsePbftSigThreshold
+                        <*> parseRequireNetworkMagic
+                        <*> parseSlotLength
+  ExplorerNodeParams <$> pconfig
+ where
+  -- This merges the command line parsed values
+  -- into one `PartialCardanoconfiguration`.
+  createPcc
+    :: Last FilePath
+    -- ^ Log Configuration Path
+    -> Last Bool
+    -- ^ Capture Log Metrics
+    -> Last Text
+    -- ^ Genesis Hash
+    -> Last FilePath
+    -- ^ Genesis Path
+    -> Last FilePath
+    -- ^ Socket Path
+    -> Last FilePath
+    -- ^ Migration Directory
+    -> Last Double
+    -- ^ Signature Threshold
+    -> Last RequireNetworkMagic
+    -> Last Consensus.SlotLength
+    -> PartialCardanoConfiguration
+  createPcc
+    logConfigFp
+    logMetrics
+    genHash
+    genPath
+    socketDir
+    migDirectory
+    pbftSigThresh
+    reqNetMagic
+    slotLength = mempty { pccSocketDir = socketDir
+                        , pccLogConfig = logConfigFp
+                        , pccLogMetrics = logMetrics
+                        , pccMigrationDir = migDirectory
+                        , pccCore = mempty { pcoGenesisFile = genPath
+                                           , pcoGenesisHash = genHash
+                                           , pcoPBftSigThd = pbftSigThresh
+                                           , pcoRequiresNetworkMagic = reqNetMagic
+                                           }
+                        , pccNode = mempty { pnoSlotLength = slotLength }
+                        }
 
 pMigrationDir :: Parser MigrationDir
 pMigrationDir =
@@ -67,14 +100,5 @@ pMigrationDir =
     (  Opt.long "schema-dir"
     <> Opt.help "The directory containing the migrations."
     <> Opt.completer (Opt.bashCompleter "directory")
-    <> Opt.metavar "FILEPATH"
-    )
-
-pSocketPath :: Parser SocketPath
-pSocketPath =
-  SocketPath <$> Opt.strOption
-    ( Opt.long "socket-path"
-    <> Opt.help "Path to a cardano-node socket"
-    <> Opt.completer (Opt.bashCompleter "file")
     <> Opt.metavar "FILEPATH"
     )
