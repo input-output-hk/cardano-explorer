@@ -1,7 +1,8 @@
 { forDockerFile ? false }:
 
 let
-  rawNixpkgs = builtins.fetchTarball "https://github.com/nixos/nixpkgs/archive/d484f2b7fc0834a068e8ace851faa449a03963f5.tar.gz";
+  sources = import ../nix/sources.nix;
+  rawNixpkgs = sources.raw-nixpkgs;
   helperPkgs = import rawNixpkgs { config = {}; overlays = []; };
   patchedNixpkgs = helperPkgs.runCommand "nixpkgs-patched" { patches = [ ./nixpkgs.patch ]; } ''
     cp -r ${rawNixpkgs} $out
@@ -23,18 +24,8 @@ let
   iohkLib = import ../lib.nix { };
   self = import ../. {};
   targetEnv = iohkLib.cardanoLib.environments.mainnet;
-  iohk-ops-src = fetchFromGitHub {
-    owner = "input-output-hk";
-    repo = "iohk-ops";
-    rev = "d61dd51f7b961e244ed485cac51d3126f695b250";
-    sha256 = "0nzzcgkrsq8m4kcjr430rybindfkys8kn5vdnnzmmhw5c2i33c7x";
-  };
-  cardano-node-src = fetchFromGitHub {
-    owner = "input-output-hk";
-    repo = "cardano-node";
-    rev = "b475810273bbf158632bb273575df398ecbed240";
-    sha256 = "1f7xphv7na7qbzdm1z27aqsdkxn6zgl2hqkkyznv3nhhr311267b";
-  };
+  iohk-ops-src = sources.iohk-ops;
+  cardano-node-src = sources.cardano-node-docker;
   customQueries = {
     cexplorerBlockCount = {
       query = "SELECT COUNT(*) AS count FROM block";
