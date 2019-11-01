@@ -119,8 +119,7 @@ let
         "user=postgres database=cexplorer host=/run/postgresql sslmode=disable";
       extraFlags = [
         "--disable-default-metrics"
-        "--extend.query-path"
-        (builtins.toFile "queries.yaml" (builtins.toJSON customQueries))
+        "--extend.query-path" (builtins.toFile "queries.yaml" (builtins.toJSON customQueries))
       ];
     };
 
