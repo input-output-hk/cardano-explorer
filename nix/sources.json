@@ -95,6 +95,30 @@
         "url": "https://github.com/NixOS/nixpkgs-channels/archive/9bbad4c6254513fa62684da57886c4f988a92092.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
+    "nixpkgs-hasura-attr": {
+        "branch": "hasura_graphql-engine",
+        "description": "Nix Packages collection",
+        "homepage": null,
+        "owner": "input-output-hk",
+        "repo": "nixpkgs",
+        "rev": "7008719046b97416a1119523267cdb8095b8cbda",
+        "sha256": "1s170az1fc88q5wy04lacad3dmazzgxsj3q53g3n1gdgard1k5ch",
+        "type": "tarball",
+        "url": "https://github.com/input-output-hk/nixpkgs/archive/7008719046b97416a1119523267cdb8095b8cbda.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "nixpkgs-hasura-base": {
+        "branch": "master",
+        "description": "Nix Packages collection",
+        "homepage": null,
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "933a5c89fdf0db2a41a1b3cf4a7e6538f91737b4",
+        "sha256": "1h31jahfch250slqy8nz3kp5ywq231zcyx3a5i7bn8drkmx68gya",
+        "type": "tarball",
+        "url": "https://github.com/nixos/nixpkgs/archive/933a5c89fdf0db2a41a1b3cf4a7e6538f91737b4.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
     "raw-nixpkgs": {
         "branch": "master",
         "description": "Nix Packages collection",
