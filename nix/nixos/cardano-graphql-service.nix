@@ -4,29 +4,10 @@ let
   cfg = config.services.cardano-graphql;
   sources = import ../../nix/sources.nix;
 
-  # GraphQL Engine:
-
-    # Method 1: Quick test using Craige's nixpkgs branch now at iohk nixpkgs.
-    # Note the last commit breaks things again (c874b1c8111), so pinned at commit 7008719046b
-
-  #nixpkgsHasuraAttrSrc = sources.nixpkgs-hasura-attr;
-  #nixpkgsHasuraAttr = import nixpkgsHasuraAttrSrc { config = { allowBroken = true; }; };
-  #graphqlEngineAttr = nixpkgsHasuraAttr.pkgs.callPackage (nixpkgsHasuraAttrSrc + "/pkgs/development/libraries/graphql-engine") { };
-  #graphqlEngine = graphqlEngineAttr.graphql-engine;
-
-    # Method 2: Bring the changes made to nixpkgs locally, using a compatible nixpkgs rev for callPackage
-    # (the base commit under Craige's changes: 933a5c89fdf)
-    # Also adjust the haskell.lib properties to not require `config = { allowBroken = true; };`
-
   nixpkgsHasuraBaseSrc = sources.nixpkgs-hasura-base;
   nixpkgsHasuraAttr = import nixpkgsHasuraBaseSrc {};
   graphqlEngineAttr = nixpkgsHasuraAttr.pkgs.callPackage ./graphql-engine/default.nix {};
   graphqlEngine = graphqlEngineAttr.graphql-engine;
-
-
-  # FE Component:
-
-    # Method 1: Source is not yet importable via niv, so pull it from a local pre-clone on the appropriate branch
 
   feBaseSrc = (import /etc/nixos/secrets/fe.nix).path;
   feBaseAttr = import feBaseSrc;
@@ -52,6 +33,11 @@ in {
         default = ''""'';
       };
 
+      dbAdminUser = lib.mkOption {
+        type = lib.types.str;
+        default = "postgres";
+      };
+
       db = lib.mkOption {
         type = lib.types.str;
         default = "cexplorer";
@@ -67,15 +53,46 @@ in {
         default = 9999;
       };
 
-      hasuraUri = lib.mkOption {
+      hasuraIp = lib.mkOption {
         type = lib.types.str;
-        default = "https://127.0.0.1:9999/v1/graphql";
+        default = "127.0.0.1";
+      };
+
+      hasuraProtocol = lib.mkOption {
+        type = lib.types.str;
+        default = "http";
       };
     };
   };
-  config = {
+  config = let
+    hasuraBaseUri = cfg.hasuraProtocol + "://" + cfg.hasuraIp + ":" + (toString cfg.enginePort) + "/";
+    hasuraDbPerms = pkgs.writeScript "hasuraDbPerms.sql" ''
+      CREATE EXTENSION IF NOT EXISTS pgcrypto;
+      CREATE SCHEMA IF NOT EXISTS hdb_catalog;
+      CREATE SCHEMA IF NOT EXISTS hdb_views;
+      ALTER SCHEMA hdb_catalog OWNER TO ${cfg.dbUser};
+      ALTER SCHEMA hdb_views OWNER TO ${cfg.dbUser};
+      GRANT SELECT ON ALL TABLES IN SCHEMA information_schema TO ${cfg.dbUser};
+      GRANT SELECT ON ALL TABLES IN SCHEMA pg_catalog TO ${cfg.dbUser};
+    '';
+    hasuraDbViews = feBaseSrc + "/test/postgres/init/002_views.sql";
+    hasuraDbMetadata = feBaseSrc + "/hasura/migrations/metadata.json";
+    postgresqlIp = if ((__head (pkgs.lib.stringToCharacters cfg.host)) == "/")
+                   then "127.0.0.1"
+                   else cfg.host;
+  in {
     systemd.services.graphql-engine = {
       wantedBy = [ "multi-user.target" ];
+      requires = [ "postgresql.service" ];
+      path = with pkgs; [ curl netcat postgresql sudo ];
+      preStart = ''
+        for x in {1..10}; do
+          nc -z ${postgresqlIp} ${toString cfg.dbPort} && break
+          echo loop $x: waiting for postgresql 2 sec...
+          sleep 2
+        done
+        sudo -u ${cfg.dbAdminUser} -- psql ${cfg.db} < ${hasuraDbPerms}
+      '';
       script = ''
         ${graphqlEngine}/bin/graphql-engine \
           --host ${cfg.host} \
@@ -89,14 +106,29 @@ in {
     };
     systemd.services.cardano-graphql = {
       wantedBy = [ "multi-user.target" ];
+      requires = [ "graphql-engine.service" ];
       environment = {
-        HASURA_URI = cfg.hasuraUri;
+        HASURA_URI = hasuraBaseUri + "v1/graphql";
       };
-      path = [ nixpkgsHasuraAttr.pkgs.nodejs-12_x ];
+      path = with pkgs; [ netcat curl postgresql nodejs-12_x ];
+      preStart = ''
+        for x in {1..12}; do
+          [ $(curl -s -o /dev/null -w "%{http_code}" http://localhost:8100/api/blocks/pages) == "200" ] && break;
+          echo loop $x: waiting for cardano exporter tables 10 sec...
+          sleep 10
+        done
+        psql -U ${cfg.dbUser} ${cfg.db} < ${hasuraDbViews} || true
+
+        for x in {1..10}; do
+          nc -z ${cfg.hasuraIp} ${toString cfg.enginePort} && break
+          echo loop $x: waiting for graphql-engine 2 sec...
+          sleep 2
+        done
+        curl -d'{"type":"replace_metadata", "args":'$(cat ${hasuraDbMetadata})'}' ${hasuraBaseUri}v1/query
+      '';
       script = ''
         node --version
         node ${fe}/index.js
-        #${fe}/bin/cardano-graphql
       '';
     };
   };
