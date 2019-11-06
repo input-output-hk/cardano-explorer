@@ -24,6 +24,9 @@
         "transformers-except" = (((hackage.transformers-except)."0.1.1").revisions).default;
         "text-ansi" = (((hackage.text-ansi)."0.1.0").revisions).default;
         "Diff" = (((hackage.Diff)."0.4.0").revisions).default;
+        "Unique" = (((hackage.Unique)."0.4.7.6").revisions).default;
+        "moo" = (((hackage.moo)."1.2").revisions).default;
+        "gray-code" = (((hackage.gray-code)."0.3.1").revisions).default;
         "base58-bytestring" = (((hackage.base58-bytestring)."0.1.0").revisions).default;
         "hedgehog" = (((hackage.hedgehog)."1.0").revisions).default;
         "micro-recursion-schemes" = (((hackage.micro-recursion-schemes)."5.0.2.2").revisions).default;
@@ -60,6 +63,10 @@
         ouroboros-consensus = ./ouroboros-consensus.nix;
         typed-protocols = ./typed-protocols.nix;
         typed-protocols-cbor = ./typed-protocols-cbor.nix;
+        goblins = ./goblins.nix;
+        small-steps = ./small-steps.nix;
+        cs-ledger = ./cs-ledger.nix;
+        cs-blockchain = ./cs-blockchain.nix;
         cardano-crypto = ./cardano-crypto.nix;
         };
       compiler.version = "8.6.5";

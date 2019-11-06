@@ -59,6 +59,7 @@ in { system, compiler, flags, pkgs, hsPkgs, pkgconfPkgs, ... }:
         depends = [
           (hsPkgs."base" or (buildDepError "base"))
           (hsPkgs."base16-bytestring" or (buildDepError "base16-bytestring"))
+          (hsPkgs."bimap" or (buildDepError "bimap"))
           (hsPkgs."bytestring" or (buildDepError "bytestring"))
           (hsPkgs."cardano-binary" or (buildDepError "cardano-binary"))
           (hsPkgs."cardano-binary-test" or (buildDepError "cardano-binary-test"))
@@ -70,12 +71,19 @@ in { system, compiler, flags, pkgs, hsPkgs, pkgconfPkgs, ... }:
           (hsPkgs."cardano-prelude-test" or (buildDepError "cardano-prelude-test"))
           (hsPkgs."containers" or (buildDepError "containers"))
           (hsPkgs."cryptonite" or (buildDepError "cryptonite"))
+          (hsPkgs."cs-blockchain" or (buildDepError "cs-blockchain"))
+          (hsPkgs."cs-ledger" or (buildDepError "cs-ledger"))
           (hsPkgs."directory" or (buildDepError "directory"))
           (hsPkgs."filepath" or (buildDepError "filepath"))
           (hsPkgs."formatting" or (buildDepError "formatting"))
+          (hsPkgs."generic-monoid" or (buildDepError "generic-monoid"))
           (hsPkgs."hedgehog" or (buildDepError "hedgehog"))
+          (hsPkgs."lens" or (buildDepError "lens"))
           (hsPkgs."mtl" or (buildDepError "mtl"))
           (hsPkgs."optparse-applicative" or (buildDepError "optparse-applicative"))
+          (hsPkgs."resourcet" or (buildDepError "resourcet"))
+          (hsPkgs."small-steps" or (buildDepError "small-steps"))
+          (hsPkgs."streaming" or (buildDepError "streaming"))
           (hsPkgs."tasty" or (buildDepError "tasty"))
           (hsPkgs."tasty-hedgehog" or (buildDepError "tasty-hedgehog"))
           (hsPkgs."text" or (buildDepError "text"))
@@ -88,8 +96,8 @@ in { system, compiler, flags, pkgs, hsPkgs, pkgconfPkgs, ... }:
     } // {
     src = (pkgs.lib).mkDefault (pkgs.fetchgit {
       url = "https://github.com/input-output-hk/cardano-ledger";
-      rev = "8854e56b68ab3b73ed2fd445d8c1db7d34b7c7f2";
-      sha256 = "05k6r4sn0sy7qb9ppsnn3nwrn8qimkilhq3im5dva15fdn8vz42k";
+      rev = "77043a7c58b73aaaea0dc02c6c780988747903b3";
+      sha256 = "1ndmvx7bai6727n27vqwn1hh1mgsrf6dqwkyy0q176ggi8pi5b3i";
       });
     postUnpack = "sourceRoot+=/cardano-ledger/test; echo source root reset to \$sourceRoot";
     }

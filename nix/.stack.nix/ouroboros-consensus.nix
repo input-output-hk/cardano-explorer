@@ -64,7 +64,6 @@ in { system, compiler, flags, pkgs, hsPkgs, pkgconfPkgs, ... }:
           (hsPkgs."typed-protocols-cbor" or (buildDepError "typed-protocols-cbor"))
           (hsPkgs."io-sim-classes" or (buildDepError "io-sim-classes"))
           (hsPkgs."contra-tracer" or (buildDepError "contra-tracer"))
-          (hsPkgs."cardano-ledger-test" or (buildDepError "cardano-ledger-test"))
           (hsPkgs."bifunctors" or (buildDepError "bifunctors"))
           (hsPkgs."bimap" or (buildDepError "bimap"))
           (hsPkgs."bytestring" or (buildDepError "bytestring"))
@@ -82,7 +81,6 @@ in { system, compiler, flags, pkgs, hsPkgs, pkgconfPkgs, ... }:
           (hsPkgs."filepath" or (buildDepError "filepath"))
           (hsPkgs."fingertree" or (buildDepError "fingertree"))
           (hsPkgs."formatting" or (buildDepError "formatting"))
-          (hsPkgs."memory" or (buildDepError "memory"))
           (hsPkgs."mmorph" or (buildDepError "mmorph"))
           (hsPkgs."mtl" or (buildDepError "mtl"))
           (hsPkgs."network" or (buildDepError "network"))
@@ -217,8 +215,8 @@ in { system, compiler, flags, pkgs, hsPkgs, pkgconfPkgs, ... }:
     } // {
     src = (pkgs.lib).mkDefault (pkgs.fetchgit {
       url = "https://github.com/input-output-hk/ouroboros-network";
-      rev = "b7d3ef6c68169e5ce4396b26085a9cebc500f615";
-      sha256 = "14ls4vanz2skqq2yhkgvpgx877wwy0dkddxrf7p2x4kgcvxp2561";
+      rev = "97500309e161627141605f82b01cddc5f6feea11";
+      sha256 = "00zyxckzl6ad1vjk0dlsyv2dqkhv5z18ch3nlxjv8sl7n18rjjfn";
       });
     postUnpack = "sourceRoot+=/ouroboros-consensus; echo source root reset to \$sourceRoot";
     }

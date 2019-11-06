@@ -41,16 +41,16 @@ in { system, compiler, flags, pkgs, hsPkgs, pkgconfPkgs, ... }:
   {
     flags = { development = false; };
     package = {
-      specVersion = "1.10";
-      identifier = { name = "cardano-binary"; version = "1.5.0"; };
+      specVersion = "2.0";
+      identifier = { name = "cs-ledger"; version = "0.1.0.0"; };
       license = "MIT";
-      copyright = "2019 IOHK";
-      maintainer = "operations@iohk.io";
-      author = "IOHK";
-      homepage = "";
+      copyright = "";
+      maintainer = "formal.methods@iohk.io";
+      author = "IOHK Formal Methods Team";
+      homepage = "https://github.com/input-output-hk/cardano-chain";
       url = "";
-      synopsis = "Binary serialization for Cardano";
-      description = "This package includes the binary serialization format for Cardano";
+      synopsis = "Executable specification of Cardano ledger";
+      description = "";
       buildType = "Simple";
       isLocal = true;
       };
@@ -58,41 +58,52 @@ in { system, compiler, flags, pkgs, hsPkgs, pkgconfPkgs, ... }:
       "library" = {
         depends = [
           (hsPkgs."base" or (buildDepError "base"))
-          (hsPkgs."aeson" or (buildDepError "aeson"))
-          (hsPkgs."bytestring" or (buildDepError "bytestring"))
-          (hsPkgs."cardano-prelude" or (buildDepError "cardano-prelude"))
-          (hsPkgs."cborg" or (buildDepError "cborg"))
+          (hsPkgs."bimap" or (buildDepError "bimap"))
           (hsPkgs."containers" or (buildDepError "containers"))
-          (hsPkgs."digest" or (buildDepError "digest"))
-          (hsPkgs."formatting" or (buildDepError "formatting"))
-          (hsPkgs."recursion-schemes" or (buildDepError "recursion-schemes"))
-          (hsPkgs."safe-exceptions" or (buildDepError "safe-exceptions"))
-          (hsPkgs."tagged" or (buildDepError "tagged"))
-          (hsPkgs."text" or (buildDepError "text"))
-          (hsPkgs."time" or (buildDepError "time"))
-          (hsPkgs."vector" or (buildDepError "vector"))
+          (hsPkgs."filepath" or (buildDepError "filepath"))
+          (hsPkgs."file-embed" or (buildDepError "file-embed"))
+          (hsPkgs."goblins" or (buildDepError "goblins"))
+          (hsPkgs."hashable" or (buildDepError "hashable"))
+          (hsPkgs."hedgehog" or (buildDepError "hedgehog"))
+          (hsPkgs."lens" or (buildDepError "lens"))
+          (hsPkgs."template-haskell" or (buildDepError "template-haskell"))
+          (hsPkgs."Unique" or (buildDepError "Unique"))
+          (hsPkgs."cardano-binary" or (buildDepError "cardano-binary"))
+          (hsPkgs."small-steps" or (buildDepError "small-steps"))
           ];
         buildable = true;
         };
       tests = {
-        "test" = {
+        "doctests" = {
           depends = [
             (hsPkgs."base" or (buildDepError "base"))
-            (hsPkgs."bytestring" or (buildDepError "bytestring"))
-            (hsPkgs."cardano-binary" or (buildDepError "cardano-binary"))
-            (hsPkgs."cardano-prelude" or (buildDepError "cardano-prelude"))
-            (hsPkgs."cardano-prelude-test" or (buildDepError "cardano-prelude-test"))
-            (hsPkgs."cborg" or (buildDepError "cborg"))
+            (hsPkgs."doctest" or (buildDepError "doctest"))
             (hsPkgs."containers" or (buildDepError "containers"))
-            (hsPkgs."formatting" or (buildDepError "formatting"))
             (hsPkgs."hedgehog" or (buildDepError "hedgehog"))
-            (hsPkgs."hspec" or (buildDepError "hspec"))
-            (hsPkgs."pretty-show" or (buildDepError "pretty-show"))
-            (hsPkgs."QuickCheck" or (buildDepError "QuickCheck"))
-            (hsPkgs."quickcheck-instances" or (buildDepError "quickcheck-instances"))
-            (hsPkgs."tagged" or (buildDepError "tagged"))
+            (hsPkgs."lens" or (buildDepError "lens"))
+            (hsPkgs."memory" or (buildDepError "memory"))
             (hsPkgs."text" or (buildDepError "text"))
-            (hsPkgs."vector" or (buildDepError "vector"))
+            (hsPkgs."small-steps" or (buildDepError "small-steps"))
+            (hsPkgs."cs-ledger" or (buildDepError "cs-ledger"))
+            ];
+          build-tools = [
+            (hsPkgs.buildPackages.doctest-discover or (pkgs.buildPackages.doctest-discover or (buildToolDepError "doctest-discover")))
+            ];
+          buildable = true;
+          };
+        "ledger-rules-test" = {
+          depends = [
+            (hsPkgs."base" or (buildDepError "base"))
+            (hsPkgs."bimap" or (buildDepError "bimap"))
+            (hsPkgs."containers" or (buildDepError "containers"))
+            (hsPkgs."lens" or (buildDepError "lens"))
+            (hsPkgs."hedgehog" or (buildDepError "hedgehog"))
+            (hsPkgs."tasty" or (buildDepError "tasty"))
+            (hsPkgs."tasty-hunit" or (buildDepError "tasty-hunit"))
+            (hsPkgs."tasty-hedgehog" or (buildDepError "tasty-hedgehog"))
+            (hsPkgs."Unique" or (buildDepError "Unique"))
+            (hsPkgs."cs-ledger" or (buildDepError "cs-ledger"))
+            (hsPkgs."small-steps" or (buildDepError "small-steps"))
             ];
           buildable = true;
           };
@@ -100,9 +111,9 @@ in { system, compiler, flags, pkgs, hsPkgs, pkgconfPkgs, ... }:
       };
     } // {
     src = (pkgs.lib).mkDefault (pkgs.fetchgit {
-      url = "https://github.com/input-output-hk/cardano-base";
-      rev = "aa42930412725b29f7a1873f26f28733689b155a";
-      sha256 = "0ghnymbpivw4y3pihsmcnxyprpyl7pnz39w7pcpc43cgkfwyz8zj";
+      url = "https://github.com/input-output-hk/cardano-ledger-specs";
+      rev = "ffb39c870d4873b8501b9df05101d9c9b3e84a39";
+      sha256 = "0rr4ifra8xmf72yhjllb1y4ywj02ylamiivk9dg4qsqsg42dwabl";
       });
-    postUnpack = "sourceRoot+=/binary; echo source root reset to \$sourceRoot";
+    postUnpack = "sourceRoot+=/byron/ledger/executable-spec; echo source root reset to \$sourceRoot";
     }

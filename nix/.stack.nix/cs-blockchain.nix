@@ -42,15 +42,15 @@ in { system, compiler, flags, pkgs, hsPkgs, pkgconfPkgs, ... }:
     flags = { development = false; };
     package = {
       specVersion = "1.10";
-      identifier = { name = "cardano-crypto-class"; version = "2.0.0"; };
+      identifier = { name = "cs-blockchain"; version = "0.1.0.0"; };
       license = "MIT";
-      copyright = "2019 IOHK";
-      maintainer = "operations@iohk.io";
-      author = "IOHK";
-      homepage = "";
+      copyright = "";
+      maintainer = "formal.methods@iohk.io";
+      author = "IOHK Formal Methods Team";
+      homepage = "https://github.com/input-output-hk/cardano-chain";
       url = "";
-      synopsis = "Type classes abstracting over cryptography primitives for Cardano";
-      description = "Type classes abstracting over cryptography primitives for Cardano";
+      synopsis = "Executable specification of the Cardano blockchain";
+      description = "";
       buildType = "Simple";
       isLocal = true;
       };
@@ -58,30 +58,32 @@ in { system, compiler, flags, pkgs, hsPkgs, pkgconfPkgs, ... }:
       "library" = {
         depends = [
           (hsPkgs."base" or (buildDepError "base"))
-          (hsPkgs."base16-bytestring" or (buildDepError "base16-bytestring"))
+          (hsPkgs."bimap" or (buildDepError "bimap"))
           (hsPkgs."bytestring" or (buildDepError "bytestring"))
-          (hsPkgs."cardano-binary" or (buildDepError "cardano-binary"))
-          (hsPkgs."cardano-prelude" or (buildDepError "cardano-prelude"))
-          (hsPkgs."cryptonite" or (buildDepError "cryptonite"))
-          (hsPkgs."deepseq" or (buildDepError "deepseq"))
-          (hsPkgs."memory" or (buildDepError "memory"))
-          (hsPkgs."reflection" or (buildDepError "reflection"))
-          (hsPkgs."vector" or (buildDepError "vector"))
+          (hsPkgs."containers" or (buildDepError "containers"))
+          (hsPkgs."cs-ledger" or (buildDepError "cs-ledger"))
+          (hsPkgs."goblins" or (buildDepError "goblins"))
+          (hsPkgs."hashable" or (buildDepError "hashable"))
+          (hsPkgs."hedgehog" or (buildDepError "hedgehog"))
+          (hsPkgs."lens" or (buildDepError "lens"))
+          (hsPkgs."small-steps" or (buildDepError "small-steps"))
           ];
         buildable = true;
         };
       tests = {
-        "test-crypto" = {
+        "chain-rules-test" = {
           depends = [
             (hsPkgs."base" or (buildDepError "base"))
-            (hsPkgs."bytestring" or (buildDepError "bytestring"))
-            (hsPkgs."cardano-binary" or (buildDepError "cardano-binary"))
-            (hsPkgs."cardano-crypto-class" or (buildDepError "cardano-crypto-class"))
-            (hsPkgs."cborg" or (buildDepError "cborg"))
-            (hsPkgs."cryptonite" or (buildDepError "cryptonite"))
-            (hsPkgs."QuickCheck" or (buildDepError "QuickCheck"))
+            (hsPkgs."containers" or (buildDepError "containers"))
+            (hsPkgs."data-ordlist" or (buildDepError "data-ordlist"))
+            (hsPkgs."hedgehog" or (buildDepError "hedgehog"))
+            (hsPkgs."lens" or (buildDepError "lens"))
             (hsPkgs."tasty" or (buildDepError "tasty"))
-            (hsPkgs."tasty-quickcheck" or (buildDepError "tasty-quickcheck"))
+            (hsPkgs."tasty-hedgehog" or (buildDepError "tasty-hedgehog"))
+            (hsPkgs."tasty-hunit" or (buildDepError "tasty-hunit"))
+            (hsPkgs."cs-blockchain" or (buildDepError "cs-blockchain"))
+            (hsPkgs."cs-ledger" or (buildDepError "cs-ledger"))
+            (hsPkgs."small-steps" or (buildDepError "small-steps"))
             ];
           buildable = true;
           };
@@ -89,9 +91,9 @@ in { system, compiler, flags, pkgs, hsPkgs, pkgconfPkgs, ... }:
       };
     } // {
     src = (pkgs.lib).mkDefault (pkgs.fetchgit {
-      url = "https://github.com/input-output-hk/cardano-base";
-      rev = "aa42930412725b29f7a1873f26f28733689b155a";
-      sha256 = "0ghnymbpivw4y3pihsmcnxyprpyl7pnz39w7pcpc43cgkfwyz8zj";
+      url = "https://github.com/input-output-hk/cardano-ledger-specs";
+      rev = "ffb39c870d4873b8501b9df05101d9c9b3e84a39";
+      sha256 = "0rr4ifra8xmf72yhjllb1y4ywj02ylamiivk9dg4qsqsg42dwabl";
       });
-    postUnpack = "sourceRoot+=/cardano-crypto-class; echo source root reset to \$sourceRoot";
+    postUnpack = "sourceRoot+=/byron/chain/executable-spec; echo source root reset to \$sourceRoot";
     }

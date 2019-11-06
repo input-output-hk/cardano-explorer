@@ -35,6 +35,9 @@ extra-deps:
   - transformers-except-0.1.1
   - text-ansi-0.1.0
   - Diff-0.4.0
+  - Unique-0.4.7.6
+  - moo-1.2
+  - gray-code-0.3.1
 
   - git: https://github.com/input-output-hk/cardano-shell
     commit: 9c44fc3fdf0056f8e9862d1949b3a49357048e11
