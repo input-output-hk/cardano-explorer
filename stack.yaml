@@ -1,4 +1,4 @@
-resolver: https://raw.githubusercontent.com/input-output-hk/cardano-prelude/599d27a05597f96b9bfffa7920806fa638dcea10/snapshot.yaml
+resolver: https://raw.githubusercontent.com/input-output-hk/cardano-prelude/dc40b2e60cee4e808ffaa275926ade74a6c987d1/snapshot.yaml
 compiler: ghc-8.6.5
 
 
@@ -37,12 +37,12 @@ extra-deps:
   - Diff-0.4.0
 
   - git: https://github.com/input-output-hk/cardano-shell
-    commit: 8abae427c44f0b447117f78e2c1f5006dac2edf8
+    commit: 9c44fc3fdf0056f8e9862d1949b3a49357048e11
     subdirs:
       - cardano-shell
 
   - git: https://github.com/input-output-hk/cardano-prelude
-    commit: ad19158c7599bc5d50fe7cb0111a1488a139a381
+    commit: dc40b2e60cee4e808ffaa275926ade74a6c987d1
     subdirs:
       - .
       - test
@@ -51,7 +51,7 @@ extra-deps:
     commit: 43a036c5bbe68ca2e9cbe611eab7982e2348fe49
 
   - git: https://github.com/input-output-hk/iohk-monitoring-framework
-    commit: ba6e4eaf61903d2bd4d745215bae29d35a58d0b6
+    commit: a71addb2c45a8e116c2a57385b67812d51352a7a
     subdirs:
       - contra-tracer
       - iohk-monitoring
@@ -62,20 +62,20 @@ extra-deps:
       - plugins/scribe-systemd
 
   - git: https://github.com/input-output-hk/cardano-node
-    commit: d92e1d426af872346ff73a173446796de810353f
+    commit: 1f13d95211d816304788f3c384a694dde4e964fb
     subdirs:
       - cardano-config
       - cardano-node
 
   - git: https://github.com/input-output-hk/cardano-base
-    commit: 5c575d46afbfe333de0ccba70b084db8302abf42
+    commit: aa42930412725b29f7a1873f26f28733689b155a
     subdirs:
       - binary
       - binary/test
       - cardano-crypto-class
 
   - git: https://github.com/input-output-hk/cardano-ledger
-    commit: 8854e56b68ab3b73ed2fd445d8c1db7d34b7c7f2
+    commit: 77043a7c58b73aaaea0dc02c6c780988747903b3
     subdirs:
       - cardano-ledger
       - cardano-ledger/test
@@ -83,7 +83,7 @@ extra-deps:
       - crypto/test
 
   - git: https://github.com/input-output-hk/ouroboros-network
-    commit: b7d3ef6c68169e5ce4396b26085a9cebc500f615
+    commit: 97500309e161627141605f82b01cddc5f6feea11
     subdirs:
       - io-sim-classes
       - network-mux
@@ -91,3 +91,17 @@ extra-deps:
       - ouroboros-consensus
       - typed-protocols
       - typed-protocols-cbor
+
+  - git: https://github.com/input-output-hk/goblins
+    commit: 26d35ad52fe9ade3391532dbfeb2f416f07650bc
+
+  - git: https://github.com/input-output-hk/cardano-ledger-specs
+    commit: ffb39c870d4873b8501b9df05101d9c9b3e84a39
+    subdirs:
+      # small-steps
+      - byron/semantics/executable-spec
+      # cs-ledger
+      - byron/ledger/executable-spec
+      # cs-blockchain
+      - byron/chain/executable-spec
+
