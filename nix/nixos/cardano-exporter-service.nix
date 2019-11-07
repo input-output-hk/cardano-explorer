@@ -116,6 +116,17 @@ in {
           WorkingDirectory = "/var/lib/cexplorer";
         };
         wantedBy = [ "multi-user.target" ];
+        wants = [ "cardano-node.service" ];
+        serviceConfig.PermissionsStartOnly = "true";
+        preStart = ''
+          for x in {1..24}; do
+            [ -S ${config.services.cardano-exporter.socketPath} ] && break
+              echo loop $x: waiting for ${config.services.cardano-exporter.socketPath} 5 sec...
+            sleep 5
+          done
+          chgrp cexplorer ${config.services.cardano-exporter.socketPath}
+          chmod g+w ${config.services.cardano-exporter.socketPath}
+        '';
       };
       services.cardano-exporter = {
         inherit pgpass;
