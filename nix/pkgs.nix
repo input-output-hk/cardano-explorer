@@ -3,17 +3,8 @@
 ############################################################################
 
 { pkgs
-
-# haskell.nix
-, haskell
-
 # Filtered sources of this project
 , src
-
-# Customisations for cross-compiling
-, iohk-extras ? {}
-, iohk-module ? {}
-
 }:
 
 let
@@ -44,16 +35,13 @@ let
       ALTER SCHEMA public   OWNER TO $DBUSER;
     EOF
   '';
-  # our packages
-  stack-pkgs = import ./.stack.nix/default.nix;
-
-  # Grab the compiler name from stack-to-nix output.
-  compiler = (stack-pkgs.extras {}).compiler.nix-name;
 
   # This creates the Haskell package set.
   # https://input-output-hk.github.io/haskell.nix/user-guide/projects/
-  pkgSet = haskell.mkStackPkgSet {
-    inherit stack-pkgs;
+in
+  pkgs.haskell-nix.cabalProject' {
+    name = "cardano-explorer";
+    inherit src;
     modules = [
       # Add source filtering to local packages
       {
@@ -75,18 +63,5 @@ let
           };
         };
       }
-
-      # The iohk-module will supply us with the necessary
-      # cross compilation plumbing to make Template Haskell
-      # work when cross compiling.
-      iohk-module
     ];
-
-    pkg-def-extras = [
-      # iohk-extras contains package overrides and patches per ghc version.
-      iohk-extras.${compiler}
-    ];
-  };
-
-in
-  pkgSet.config.hsPkgs // { _config = pkgSet.config; }
+  }

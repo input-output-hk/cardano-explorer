@@ -10,18 +10,25 @@
 , config ? {}
 # Import IOHK common nix lib
 , iohkLib ? import ./lib.nix { inherit system crossSystem config; }
-# Use nixpkgs pin from iohkLib
-, pkgs ? iohkLib.pkgs
 , customConfig ? {}
 }:
 
 let
   sources = import ./nix/sources.nix;
-  haskell_nix = pkgs.fetchgit (builtins.removeAttrs (builtins.fromJSON (builtins.readFile "${sources.iohk-nix}/pins/haskell-nix.json")) [ "date" ]);
-  haskell = pkgs.callPackage haskell_nix {
-    hackageSourceJSON = ./nix/hackage-nix.json;
-  };
-  src = iohkLib.cleanSourceHaskell ./.;
+in
+  # Check for the upcoming version of haskell.nix.
+  # If this assert fails remove it and update the code bellow
+  # to use (import sources.haskell-nix).nixpkgsArgs
+  assert (!((import sources.haskell-nix) ? nixpkgsArgs));
+
+let
+  iohkNixpkgs = iohkLib.pkgs.fetchgit (builtins.removeAttrs (builtins.fromJSON (builtins.readFile "${sources.iohk-nix}/pins/default-nixpkgs-src.json")) [ "date" ]);
+
+  pkgs = import (sources.haskell-nix + "/nixpkgs") ((import sources.haskell-nix) // {
+    nixpkgs-pin = "release-19.03";
+    inherit system crossSystem;
+  });
+  src = pkgs.haskell-nix.haskellLib.cleanGit { src = ./.; };
   util = pkgs.callPackage ./nix/util.nix {};
 
   # Example of using a package from iohk-nix
@@ -29,15 +36,14 @@ let
   inherit (iohkLib.rust-packages.pkgs) jormungandr;
 
   # Import the Haskell package set.
-  haskellPackages = import ./nix/pkgs.nix {
-    inherit pkgs haskell src;
-    # Pass in any extra programs necessary for the build as function arguments.
-    # Provide cross-compiling secret sauce
-    inherit (iohkLib.nix-tools) iohk-extras iohk-module;
+  project = import ./nix/pkgs.nix {
+    inherit pkgs src;
   };
 
+  haskellPackages = project.hsPkgs;
+
 in {
-  inherit pkgs iohkLib src haskellPackages;
+  inherit pkgs iohkLib src project haskellPackages;
   inherit (haskellPackages.cardano-explorer.identifier) version;
 
   # Grab the executable component of our package.
