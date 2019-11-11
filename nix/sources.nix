@@ -7,10 +7,10 @@ with rec
     if hasNixpkgsPath
     then
         if hasThisAsNixpkgsPath
-        then import (builtins_fetchTarball { inherit (sources_nixpkgs) url sha256; }) {}
-        else import <nixpkgs> {}
+        then builtins.trace "!hasThisAsNixpkgsPath" (import (builtins_fetchTarball { inherit (sources_nixpkgs) url sha256; }) {})
+        else builtins.trace "USING <nixpkgs> (expect problems on hydra)!" (import <nixpkgs> {})
     else
-        import (builtins_fetchTarball { inherit (sources_nixpkgs) url sha256; }) {};
+        builtins.trace "!hasNixpkgsPath" (import (builtins_fetchTarball { inherit (sources_nixpkgs) url sha256; }) {});
 
   sources_nixpkgs =
     if builtins.hasAttr "nixpkgs" sources
@@ -41,9 +41,9 @@ with rec
         inherit (builtins) lessThan nixVersion fetchTarball;
       in
         if sha256 == null || lessThan nixVersion "1.12" then
-          fetchTarball { inherit url; }
+          builtins.trace ("builtins_fetchTarball url only " + url) (fetchTarball { inherit url; })
         else
-          fetchTarball attrs;
+          builtins.trace ("builtins_fetchTarball " + attrs.url + " " + attrs.sha256) (fetchTarball attrs);
 
   # fetchurl version that is compatible between all the versions of Nix
   builtins_fetchurl =
@@ -59,7 +59,7 @@ with rec
   # A wrapper around pkgs.fetchzip that has inspectable arguments,
   # annoyingly this means we have to specify them
   fetchzip = { url, sha256  ? null }@attrs: if sha256 == null
-    then builtins.fetchTarball { inherit url; }
+    then builtins.trace ("builtins.fetchTarball url only " + url) (builtins.fetchTarball { inherit url; })
     else pkgs.fetchzip attrs;
 
   # A wrapper around pkgs.fetchurl that has inspectable arguments,

@@ -4,7 +4,7 @@
 steps:
   - label: Check Hydra evaluation of release.nix
     commands:
-      - "nix-build -A iohkLib.check-hydra -o check-hydra.sh"
+      - "nix-build -A iohkLib.check-hydra -o check-hydra.sh --show-trace"
       - "./check-hydra.sh"
     agents:
       system: x86_64-linux
