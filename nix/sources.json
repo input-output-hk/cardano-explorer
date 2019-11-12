@@ -17,22 +17,10 @@
         "homepage": null,
         "owner": "input-output-hk",
         "repo": "cardano-node",
-        "rev": "6558c62bedfc972a1e718a2a011c770757226304",
-        "sha256": "0vgqzfzlrlnlhzjrwv5g0cf7abs4gmrkxssc8f940rs0ds5glr2l",
+        "rev": "42da1e1fa887de8836dbadef4b67ea7fa3fb0052",
+        "sha256": "0j0db9a7zbbv9whr9x4zf1aik5abkgk6c4p94k3vkayxgi48qfx3",
         "type": "tarball",
-        "url": "https://github.com/input-output-hk/cardano-node/archive/6558c62bedfc972a1e718a2a011c770757226304.tar.gz",
-        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
-    },
-    "cardano-node-nixops": {
-        "branch": "master",
-        "description": null,
-        "homepage": null,
-        "owner": "input-output-hk",
-        "repo": "cardano-node",
-        "rev": "b9a9cb686a662bca7cff40cda96f5dc0b93a00a5",
-        "sha256": "1n923na0bg6bp9pzmds029f88l1dx0dm5f32bb5mbvpr8qmd474w",
-        "type": "tarball",
-        "url": "https://github.com/input-output-hk/cardano-node/archive/b9a9cb686a662bca7cff40cda96f5dc0b93a00a5.tar.gz",
+        "url": "https://github.com/input-output-hk/cardano-node/archive/42da1e1fa887de8836dbadef4b67ea7fa3fb0052.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "gitignore": {
@@ -53,10 +41,10 @@
         "homepage": null,
         "owner": "input-output-hk",
         "repo": "iohk-nix",
-        "rev": "797f0c0290c2e8dcc0dd7a724b0e366d7f204a7c",
-        "sha256": "1p9zxg23bimyc8pjyg62p72m94rfdjb7lfffccdp6x58s77w0llj",
+        "rev": "ae4232c5e206f2cde44248099c37d6d7dfd4f342",
+        "sha256": "1yjgjvm0jcnrwqsq5dl77mz01c3iwzr2bgadqv4lsmjy7bgbp1bf",
         "type": "tarball",
-        "url": "https://github.com/input-output-hk/iohk-nix/archive/797f0c0290c2e8dcc0dd7a724b0e366d7f204a7c.tar.gz",
+        "url": "https://github.com/input-output-hk/iohk-nix/archive/ae4232c5e206f2cde44248099c37d6d7dfd4f342.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "iohk-ops": {

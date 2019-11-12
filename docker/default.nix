@@ -149,6 +149,12 @@ let
         metrics_path = "/metrics";
         static_configs = [{ targets = [ "localhost:9187" ]; }];
       }
+      {
+        job_name = "cardano-node";
+        scrape_interval = "10s";
+        metrics_path = "/metrics";
+        static_configs = [{ targets = [ "localhost:12798" ]; }];
+      }
     ];
 
     nixpkgs.overlays = [ overlay ];
