@@ -89,7 +89,6 @@ let
     ];
 
     services.cardano-node = {
-      extraOptions = [ "+RTS" "-N3" "-RTS" ];
       inherit environment;
       topology = iohkLib.cardanoLib.mkEdgeTopology {
         inherit (targetEnv) edgeHost edgeNodes;
