@@ -67,11 +67,8 @@ in {
       requires = [ "postgresql.service" ];
       path = with pkgs; [ curl netcat postgresql sudo ];
       preStart = ''
-        for x in {1..10}; do
-          nc -z ${postgresqlIp} ${toString cfg.dbPort} && break
-          echo loop $x: waiting for postgresql 2 sec...
-          sleep 2
-        done
+        echo "waiting for postgresql..."
+        pg_isready --timeout 60 --port ${toString cfg.dbPort}
         sudo -u ${cfg.dbAdminUser} -- psql ${cfg.db} < ${hasuraDbPerms}
       '';
       script = ''
