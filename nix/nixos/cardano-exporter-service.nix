@@ -162,12 +162,10 @@ in {
       systemd.services.cardano-explorer = {
         wantedBy = [ "multi-user.target" ];
         requires = [ "postgresql.service" ];
+        path = [ config.services.postgresql.package ];
         preStart = ''
-          for x in {1..10}; do
-            nc -z localhost ${toString cfg.postgres.port} && break
-            echo loop $x: waiting for postgresql 2 sec...
-            sleep 2
-          done
+          echo "waiting for postgresql..."
+          pg_isready --timeout 60 --port ${toString cfg.postgres.port}
         '';
         serviceConfig = {
           ExecStart = config.services.cardano-explorer-api.script;
