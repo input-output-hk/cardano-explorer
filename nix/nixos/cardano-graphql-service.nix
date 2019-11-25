@@ -35,10 +35,8 @@ in {
   };
   config = let
     frontendBaseSrc = sources.cardano-graphql;
-    frontendBaseAttr = import frontendBaseSrc;
-    frontend = frontendBaseAttr.cardano-graphql;
+    frontend = (import ../cardano-graphql).cardano-graphql;
     hasuraBaseUri = cfg.hasuraProtocol + "://" + cfg.hasuraIp + ":" + (toString cfg.enginePort) + "/";
-    hasuraDbViews = frontendBaseSrc + "/test/postgres/init/002_views.sql";
     hasuraDbMetadata = frontendBaseSrc + "/hasura/migrations/metadata.json";
   in lib.mkIf cfg.enable {
     systemd.services.cardano-graphql = {
@@ -54,7 +52,6 @@ in {
           echo loop $x: waiting for cardano exporter tables 10 sec...
           sleep 10
         done
-        psql -U ${cfg.dbUser} ${cfg.db} < ${hasuraDbViews} || true
 
         for x in {1..10}; do
           nc -z ${cfg.hasuraIp} ${toString cfg.enginePort} && break
