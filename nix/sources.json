@@ -5,10 +5,10 @@
         "homepage": "",
         "owner": "input-output-hk",
         "repo": "cardano-graphql",
-        "rev": "ab52491a1b4bd170327d152a66edcacd227f8ae5",
-        "sha256": "16gkq313mw7qfg0binhcm3jpxyyvh4fvdyg2rglir5p9098lq0mb",
+        "rev": "v.1.0.0-rc.0",
+        "sha256": "08bh5mal330xj4f6v18ijlvjyqig8gami1py17jhbdhi34km3yc7",
         "type": "tarball",
-        "url": "https://github.com/input-output-hk/cardano-graphql/archive/ab52491a1b4bd170327d152a66edcacd227f8ae5.tar.gz",
+        "url": "https://github.com/input-output-hk/cardano-graphql/archive/v.1.0.0-rc.0.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "cardano-node": {
