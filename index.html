@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>Cardano Explorer API(s)</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Cardano Explorer API(s)" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta property="og:title" content="Cardano Explorer API(s)" />
+  <meta property="og:description" content="Cardano Explorer API(s)" />
+  <meta property="og:image" content="https://cardanodocs.com/img/cardano.png" />
+  <link href="https://fonts.googleapis.com/css?family=Poppins&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    body a:focus {
+        outline: none;
+    }
+
+    body a {
+      background-position: center;
+      color: #FFFFFF;
+      display: inline-block;
+      font-family: Poppins;
+      font-size: 5em;
+      text-align: center;
+      text-decoration: none;
+      text-shadow: 0.05em 0.05em 5px #555;
+      width: 100%;
+      height: 50vh;
+      line-height: 50vh;
+    }
+
+    .byron {
+      background-image: url("https://ucarecdn.com/aa5aa18a-405b-4d85-bb1d-b1e585b8a017/-/progressive/yes/-/resize/1080/-/format/webp/");
+    }
+
+    .shelley {
+      background-image: url("https://ucarecdn.com/6cf49d63-ca92-4a0d-93b9-90869e1041a1/-/progressive/yes/-/resize/1080/-/format/webp/");
+    }
+
+    .disabled {
+      cursor: not-allowed;
+    }
+
+    @media only screen and (min-width: 768px) {
+      body a {
+        height: 100vh;
+        line-height: 100vh;
+        width: 50%;
+      }
+
+      .byron {
+        float: left;
+      }
+      .shelley {
+        float: right;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a class="byron" href="byron">Byron</a>
+  <a class="shelley disabled" href="#">Shelley</a>
+</body>
+</html>
