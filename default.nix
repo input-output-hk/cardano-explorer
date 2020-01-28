@@ -54,6 +54,8 @@ in {
   scripts = pkgs.callPackage ./nix/scripts.nix {
     inherit iohkLib customConfig;
   };
+  dockerBuild = pkgs.callPackage ./docker/build.nix {
+  };
 
   # This provides a development environment that can be used with nix-shell or
   # lorri. See https://input-output-hk.github.io/haskell.nix/user-guide/development/

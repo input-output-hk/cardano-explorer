@@ -1,17 +1,6 @@
-FROM ubuntu:18.04
+FROM explorer-builder:l6bl38qq9mcc3mc6vzza8dmf3zl8kqdm
 
 ARG environment=testnet
-
-RUN apt-get update
-RUN apt-get install -y sudo bzip2 curl git xz-utils
-
-RUN useradd -ms /bin/bash cardano && mkdir /nix /etc/nix && chown cardano /nix
-
-USER cardano
-ENV USER cardano
-
-RUN curl https://nixos.org/nix/install | sh
-ENV PATH /home/cardano/.nix-profile/bin/:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 COPY docker/nix.conf /etc/nix/nix.conf
 
