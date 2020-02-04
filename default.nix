@@ -70,6 +70,10 @@ recRecurseIntoAttrs (x: with pkgs; lib.isAttrs x && !lib.isDerivation x)
               ALTER SCHEMA public   OWNER TO $DBUSER;
             EOF
           '';
+         # the postCheck is required on at least darwin
+         postCheck = ''
+         kill $PSQL_PID
+         '';
         };
       }];
     }))
