@@ -8,6 +8,7 @@ let
   helperPkgs = import rawNixpkgs {
     config = { };
     overlays = [ ];
+    system = "x86_64-linux";
   };
   patchedNixpkgs = helperPkgs.runCommand "nixpkgs-patched" {
     patches = [ ./nixpkgs.patch ];
@@ -23,7 +24,7 @@ let
       g++ ${./deroot.cpp} -o $out/bin/deroot
     '';
   };
-in with import patchedNixpkgs { overlays = [ overlay ]; };
+in with import patchedNixpkgs { overlays = [ overlay ]; system = "x86_64-linux"; };
 
 let
   secrets = import ./secrets.nix;

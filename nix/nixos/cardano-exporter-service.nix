@@ -134,7 +134,7 @@ in {
             exit 1
           fi'' else "export CARDANO_NODE_SOCKET_PATH=${cfg.socketPath}"}
 
-          export PATH=${lib.makeBinPath [ self.cardano-explorer-node self.haskellPackages.cardano-explorer-db.components.exes.cardano-explorer-db-tool pkgs.postgresql ]}:$PATH
+          export PATH=${lib.makeBinPath [ self.cardano-explorer-node.components.exes.cardano-explorer-node self.cardano-explorer-db.components.exes.cardano-explorer-db-tool pkgs.postgresql ]}:$PATH
 
           cp ${cfg.pgpass} ./pgpass
           chmod 0600 ./pgpass
@@ -154,7 +154,7 @@ in {
     (lib.mkIf config.services.cardano-explorer-webapi.enable {
       services.cardano-explorer-webapi.script = pkgs.writeShellScript "cardano-explorer-webapi" ''
         export PGPASSFILE=${config.services.cardano-exporter.pgpass}
-        ${self.cardano-explorer-webapi}/bin/cardano-explorer-webapi
+        ${self.cardano-explorer-webapi.components.exes.cardano-explorer-webapi}/bin/cardano-explorer-webapi
       '';
       systemd.services.cardano-explorer-webapi = {
         wantedBy = [ "multi-user.target" ];
