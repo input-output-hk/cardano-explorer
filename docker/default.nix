@@ -243,6 +243,9 @@ let
 
     mkdir -p /var/log/
 
+    rm /etc/cardano-cfg
+    ln -sv /etc/cardano-''${ENVIRONMENT} /etc/cardano-cfg
+
     touch /etc/runit/stopit
     chmod 0 /etc/runit/stopit
     echo one
