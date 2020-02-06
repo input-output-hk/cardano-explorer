@@ -12,6 +12,7 @@
 import re
 import subprocess
 import json
+import os
 
 globalCache = {}
 
@@ -41,9 +42,15 @@ def repl(match):
   if not dict["subdir"]:
     dict["subdir"] = ''
   if not (dict['loc'], dict['tag']) in globalCache:
-    prefetchJSON = subprocess.run(
-      ["nix-prefetch-git", "--quiet", dict['loc'], dict['tag']],
-      capture_output=True, check=True).stdout
+    if 'NIX_HOST' in os.environ:
+       prefetchJSON = subprocess.run(
+        ["ssh", os.environ["NIX_HOST"], "nix-prefetch-git", "--quiet", dict['loc'], dict['tag']],
+        capture_output=True, check=True).stdout
+    else:
+       prefetchJSON = subprocess.run(
+        ["nix-prefetch-git", "--quiet", dict['loc'], dict['tag']],
+        capture_output=True, check=True).stdout
+
     globalCache[(dict['loc'], dict['tag'])] = json.loads(prefetchJSON)["sha256"]
   sha256 = globalCache[(dict['loc'], dict['tag'])]
   return """source-repository-package
@@ -53,6 +60,8 @@ def repl(match):
 {pad}--sha256: {sha256}
 {subdir}""".format(**{**dict, **{"sha256": sha256}})
 
+replaced = re.sub(pattern, repl, buffer, flags = re.I + re.M)
+
 f = open("cabal.project",'w')
-f.write(re.sub(pattern, repl, buffer, flags = re.I + re.M))
+f.write(replaced)
 f.close()
