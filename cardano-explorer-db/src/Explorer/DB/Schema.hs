@@ -21,8 +21,8 @@ import Data.Text (Text)
 import Data.Time.Clock (UTCTime)
 import Data.Word (Word16, Word64)
 
-import Database.Persist.TH (mkDeleteCascade, mkMigrate, mkPersist, onlyUniqueP, persistLowerCase,
-            requireUniquesP, share, sqlSettings)
+import Database.Persist.TH (mkDeleteCascade, mkMigrate, mkPersist, persistLowerCase,
+            share, sqlSettings)
 
 -- In the schema definition we need to match Haskell types with with the
 -- custom type defined in PostgreSQL (via 'DOMAIN' statements). For the
