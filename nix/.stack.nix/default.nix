@@ -13,9 +13,9 @@
         "generic-monoid" = (((hackage.generic-monoid)."0.1.0.0").revisions).default;
         "libsystemd-journal" = (((hackage.libsystemd-journal)."1.4.4").revisions).default;
         "network" = (((hackage.network)."3.1.0.1").revisions).default;
-        "persistent" = (((hackage.persistent)."2.10.4").revisions).default;
-        "persistent-postgresql" = (((hackage.persistent-postgresql)."2.10.1").revisions).default;
-        "persistent-template" = (((hackage.persistent-template)."2.7.3").revisions).default;
+        "persistent" = (((hackage.persistent)."2.10.5.1").revisions).default;
+        "persistent-postgresql" = (((hackage.persistent-postgresql)."2.10.1.2").revisions).default;
+        "persistent-template" = (((hackage.persistent-template)."2.8.2.3").revisions).default;
         "prometheus" = (((hackage.prometheus)."2.1.2").revisions).default;
         "pvss" = (((hackage.pvss)."0.2.0").revisions).default;
         "tasty-hedgehog" = (((hackage.tasty-hedgehog)."1.0.0.1").revisions).default;
@@ -30,6 +30,12 @@
         "gray-code" = (((hackage.gray-code)."0.3.1").revisions).default;
         "Unique" = (((hackage.Unique)."0.4.7.6").revisions).default;
         "statistics-linreg" = (((hackage.statistics-linreg)."0.3").revisions).default;
+        "socks" = (((hackage.socks)."0.6.1").revisions).default;
+        "servant" = (((hackage.servant)."0.17").revisions).default;
+        "servant-server" = (((hackage.servant-server)."0.17").revisions).default;
+        "connection" = (((hackage.connection)."0.3.1").revisions).default;
+        "http-api-data" = (((hackage.http-api-data)."0.4.1.1").revisions).default;
+        "time-compat" = (((hackage.time-compat)."1.9.2.2").revisions).default;
         "base58-bytestring" = (((hackage.base58-bytestring)."0.1.0").revisions).default;
         "hedgehog" = (((hackage.hedgehog)."1.0").revisions).default;
         "micro-recursion-schemes" = (((hackage.micro-recursion-schemes)."5.0.2.2").revisions).default;
@@ -65,6 +71,7 @@
         cardano-ledger-test = ./cardano-ledger-test.nix;
         cardano-crypto-wrapper = ./cardano-crypto-wrapper.nix;
         cardano-crypto-test = ./cardano-crypto-test.nix;
+        io-sim = ./io-sim.nix;
         io-sim-classes = ./io-sim-classes.nix;
         network-mux = ./network-mux.nix;
         ouroboros-network = ./ouroboros-network.nix;
