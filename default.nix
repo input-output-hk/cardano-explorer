@@ -20,7 +20,7 @@
 , nixpkgs ? import (builtins.fetchTarball https://github.com/NixOS/nixpkgs-channels/archive/f69a5b2.tar.gz)
 
 # haskell.nix as of Jan 16th 2020
-, haskell-nix ? import (builtins.fetchTarball https://github.com/input-output-hk/haskell.nix/archive/ff240d1.tar.gz)
+, haskell-nix ? import (builtins.fetchTarball https://github.com/input-output-hk/haskell.nix/archive/c815585.tar.gz)
 
 # pkgs is nixpkgs with the haskell-nix as agument. But we'll extend haskell-nix to allow adding additional overlays and config values.
 , pkgs ? nixpkgs (haskell-nix // {
