@@ -17,6 +17,7 @@
 
 let
   sources = import ./nix/sources.nix;
+  # TODO, switch haskell_nix to niv
   haskell_nix = pkgs.fetchgit (builtins.removeAttrs (builtins.fromJSON (builtins.readFile "${sources.iohk-nix}/pins/haskell-nix.json")) [ "date" ]);
   haskell = pkgs.callPackage haskell_nix {
     hackageSourceJSON = ./nix/hackage-nix.json;
@@ -37,7 +38,7 @@ let
   };
 
 in {
-  inherit pkgs iohkLib src haskellPackages;
+  inherit pkgs iohkLib src haskellPackages haskell_nix haskell;
   inherit (haskellPackages.cardano-explorer-webapi.identifier) version;
 
   # Grab the executable component of our package.

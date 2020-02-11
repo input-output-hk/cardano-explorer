@@ -485,7 +485,7 @@ let
     echo all docker inputs built successfully
   '';
 in {
-  inherit image helper configFiles hydraJob;
+  inherit image helper configFiles hydraJob patchedNixpkgs;
   inherit users userToPasswd lib passwd userToUseradd dockerFileSetup
     dockerFileBinaries;
 
