@@ -37,10 +37,10 @@
         "http-api-data" = (((hackage.http-api-data)."0.4.1.1").revisions).default;
         "time-compat" = (((hackage.time-compat)."1.9.2.2").revisions).default;
         "base58-bytestring" = (((hackage.base58-bytestring)."0.1.0").revisions).default;
-        "hedgehog" = (((hackage.hedgehog)."1.0").revisions).default;
+        "hedgehog" = (((hackage.hedgehog)."1.0.2").revisions).default;
         "micro-recursion-schemes" = (((hackage.micro-recursion-schemes)."5.0.2.2").revisions).default;
         "streaming-binary" = (((hackage.streaming-binary)."0.3.0.1").revisions).default;
-        "cborg" = (((hackage.cborg)."0.2.2.0").revisions).default;
+        "cborg" = (((hackage.cborg)."0.2.2.1").revisions).default;
         "canonical-json" = (((hackage.canonical-json)."0.6.0.0").revisions).default;
         cardano-explorer-db = ./cardano-explorer-db.nix;
         cardano-explorer-db-test = ./cardano-explorer-db-test.nix;
