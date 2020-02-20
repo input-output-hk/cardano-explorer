@@ -27,17 +27,19 @@ import           Cardano.TxSubmit.Web as X
 import qualified Control.Concurrent.Async as Async
 import           Control.Monad.IO.Class (liftIO)
 
+import           Ouroboros.Network.NodeToClient (withIOManager)
+
 import           Data.Text (Text)
 
 
 runTxSubmitWebapi :: TxSubmitNodeParams -> IO ()
-runTxSubmitWebapi tsnp = do
+runTxSubmitWebapi tsnp = withIOManager $ \iocp -> do
   tsnc <- readTxSubmitNodeConfig (unConfigFile $ tspConfigFile tsnp)
   gc <- readGenesisConfig tsnp tsnc
   trce <- mkTracer tsnc
   tsv <- newTxSubmitVar
   Async.race_
-    (runTxSubmitNode tsv trce gc (tspSocketPath tsnp))
+    (runTxSubmitNode iocp tsv trce gc (tspSocketPath tsnp))
     (runTxSubmitServer tsv trce (tspWebPort tsnp))
   logInfo trce "runTxSubmitWebapi: Async.race_ returned"
 

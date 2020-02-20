@@ -16,7 +16,7 @@ import qualified Data.Text as Text
 
 import           Formatting ((%), build, sformat, stext)
 
-import           Ouroboros.Consensus.Ledger.Byron.Auxiliary (ApplyMempoolPayloadErr (..))
+import           Cardano.Chain.Byron.API (ApplyMempoolPayloadErr (..))
 
 
 renderApplyMempoolPayloadErr :: ApplyMempoolPayloadErr -> Text

@@ -55,7 +55,6 @@ import           Network.Socket (SockAddr (..))
 
 import           Network.TypedProtocol.Channel (Channel)
 import           Network.TypedProtocol.Codec (Codec)
-import           Network.TypedProtocol.Codec.Cbor (DeserialiseFailure)
 import           Network.TypedProtocol.Driver (runPeer)
 
 import           Ouroboros.Consensus.Ledger.Abstract (BlockProtocol)
@@ -67,11 +66,14 @@ import           Ouroboros.Consensus.Node.Run.Abstract (RunNode, nodeDecodeGenTx
 import           Ouroboros.Consensus.Node.ErrorPolicy (consensusErrorPolicy)
 import           Ouroboros.Consensus.Protocol (NodeConfig, Protocol (..))
 
+import           Ouroboros.Network.Codec (DeserialiseFailure)
 import           Ouroboros.Network.Mux (AppType (..), OuroborosApplication (..))
-import           Ouroboros.Network.NodeToClient (ErrorPolicyTrace (..), IPSubscriptionTarget (..),
-                    LocalAddresses (..), NodeToClientProtocols (..), NetworkIPSubscriptionTracers (..),
-                    NodeToClientVersionData (..), SubscriptionParams (..), WithAddr (..),
-                    ncSubscriptionWorker_V1, networkErrorPolicies, newNetworkMutableState)
+import           Ouroboros.Network.NodeToClient (ErrorPolicyTrace (..),
+                    NodeToClientProtocols (..), NetworkSubscriptionTracers (..),
+                    NodeToClientVersionData (..), ClientSubscriptionParams (..), WithAddr (..),
+                    ncSubscriptionWorker_V1, networkErrorPolicies, newNetworkMutableState,
+                    AssociateWithIOCP, localSnocket)
+import qualified Ouroboros.Network.Snocket as Snocket
 
 import           Ouroboros.Network.Protocol.LocalTxSubmission.Client (LocalTxSubmissionClient (..),
                     LocalTxClientStIdle (..), localTxSubmissionClientPeer)
@@ -104,12 +106,12 @@ newtype SocketPath = SocketPath
   }
 
 
-runTxSubmitNode :: TxSubmitVar -> Trace IO Text -> Genesis.Config -> SocketPath -> IO ()
-runTxSubmitNode tsv trce gc socket = do
+runTxSubmitNode :: AssociateWithIOCP -> TxSubmitVar -> Trace IO Text -> Genesis.Config -> SocketPath -> IO ()
+runTxSubmitNode iocp tsv trce gc socket = do
   logInfo trce "Running tx-submit node"
   logException trce "tx-submit-node." $ do
     logProtocolMagic trce $ Ledger.configProtocolMagic gc
-    void $ runTxSubmitNodeClient tsv (mkNodeConfig gc) trce socket
+    void $ runTxSubmitNodeClient iocp tsv (mkNodeConfig gc) trce socket
 
 
 mkNodeConfig :: Genesis.Config -> NodeConfig (BlockProtocol ByronBlock)
@@ -119,29 +121,28 @@ mkNodeConfig gc =
 
 runTxSubmitNodeClient
   :: forall blk. (blk ~ ByronBlock)
-  => TxSubmitVar -> NodeConfig (BlockProtocol blk)
+  => AssociateWithIOCP
+  -> TxSubmitVar -> NodeConfig (BlockProtocol blk)
   -> Trace IO Text -> SocketPath
   -> IO Void
-runTxSubmitNodeClient tsv nodeConfig trce (SocketPath socketPath) = do
+runTxSubmitNodeClient iocp tsv nodeConfig trce (SocketPath socketPath) = do
   logInfo trce $ "localInitiatorNetworkApplication: connecting to node via " <> textShow socketPath
   networkState <- newNetworkMutableState
   ncSubscriptionWorker_V1
+    (localSnocket iocp socketPath)
     -- TODO: these tracers should be configurable for debugging purposes.
-    NetworkIPSubscriptionTracers {
-        nistMuxTracer = nullTracer,
-        nistHandshakeTracer = nullTracer,
-        nistErrorPolicyTracer = errorPolicyTracer,
-        nistSubscriptionTracer = nullTracer
+    NetworkSubscriptionTracers {
+        nsMuxTracer = nullTracer,
+        nsHandshakeTracer = nullTracer,
+        nsErrorPolicyTracer = errorPolicyTracer,
+        nsSubscriptionTracer = nullTracer
         -- TODO subscription tracer should not be 'nullTracer' by default
       }
     networkState
-    SubscriptionParams {
-        spLocalAddresses = LocalAddresses Nothing Nothing (Just $ SockAddrUnix socketPath),
-        spConnectionAttemptDelay = const Nothing,
-        spErrorPolicies = networkErrorPolicies <> consensusErrorPolicy,
-        spSubscriptionTarget = IPSubscriptionTarget
-          { ispIps = [SockAddrUnix socketPath]
-          , ispValency = 1 }
+    ClientSubscriptionParams {
+        cspAddress = Snocket.localAddressFromPath socketPath,
+        cspConnectionAttemptDelay = Nothing,
+        cspErrorPolicies = networkErrorPolicies <> consensusErrorPolicy
         }
     (NodeToClientVersionData { networkMagic = nodeNetworkMagic (Proxy @blk) nodeConfig })
     (localInitiatorNetworkApplication trce tsv)

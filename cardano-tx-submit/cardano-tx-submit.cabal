@@ -76,6 +76,7 @@ library
                       , network
                       , ouroboros-consensus
                       , ouroboros-network
+                      , ouroboros-network-framework
                       , prometheus
                       , serialise
                       , servant
@@ -85,7 +86,6 @@ library
                       , transformers
                       , transformers-except
                       , typed-protocols
-                      , typed-protocols-cbor
                       , warp
                       , yaml
 

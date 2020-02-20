@@ -12,6 +12,7 @@ module Cardano.TxSubmit.Types
   ) where
 
 import           Cardano.Binary (DecoderError)
+import           Cardano.Chain.Byron.API (ApplyMempoolPayloadErr (..))
 import qualified Cardano.Chain.UTxO as Utxo
 import           Cardano.TxSubmit.ErrorRender
 
@@ -26,8 +27,6 @@ import           Formatting ((%), build, sformat)
 import           GHC.Generics (Generic)
 
 import           Network.HTTP.Media ((//))
-
-import           Ouroboros.Consensus.Ledger.Byron.Auxiliary (ApplyMempoolPayloadErr)
 
 import           Servant (Accept (..), JSON, MimeRender (..), MimeUnrender (..), Post, ReqBody, (:>))
 import           Servant.API.Generic (ToServantApi, (:-))
