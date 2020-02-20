@@ -43,6 +43,8 @@ import qualified Cardano.Crypto as Crypto
 import           Cardano.Prelude hiding (atomically, option, (%), Nat)
 import           Cardano.Shell.Lib (GeneralException (ConfigurationError))
 
+import           Cardano.Slotting.Slot (WithOrigin (..))
+
 import qualified Codec.Serialise as Serialise
 
 import           Control.Monad.Class.MonadST (MonadST)
@@ -74,7 +76,6 @@ import           Explorer.Node.Tracing.ToObjectOrphans ()
 import           Network.Socket (SockAddr (..))
 
 import           Network.TypedProtocol.Codec (Codec)
-import           Network.TypedProtocol.Codec.Cbor (DeserialiseFailure)
 import           Network.TypedProtocol.Driver (runPeer, runPipelinedPeer)
 import           Network.TypedProtocol.Pipelined (Nat(Zero, Succ))
 
@@ -86,15 +87,18 @@ import           Ouroboros.Consensus.Node.Run.Abstract (RunNode, nodeDecodeBlock
 import           Ouroboros.Consensus.Node.ErrorPolicy (consensusErrorPolicy)
 import           Ouroboros.Consensus.Protocol (NodeConfig, Protocol (..))
 
-import           Ouroboros.Network.Block (Point (..), SlotNo (..), Tip (tipBlockNo),
-                    decodePoint, encodePoint, genesisPoint, genesisBlockNo, blockNo,
+import           Ouroboros.Network.Block (Point (..), SlotNo (..), Tip,
+                    decodePoint, encodePoint, genesisPoint, getLegacyTipBlockNo, blockNo,
                     BlockNo(unBlockNo, BlockNo),
-                    encodeTip, decodeTip)
+                    encodeTip, decodeTip,
+                    wrapCBORinCBOR, unwrapCBORinCBOR)
+import           Ouroboros.Network.Codec (DeserialiseFailure)
 import           Ouroboros.Network.Mux (AppType (..), OuroborosApplication (..))
-import           Ouroboros.Network.NodeToClient (ErrorPolicyTrace (..), IPSubscriptionTarget (..),
-                    LocalAddresses (..), NodeToClientProtocols (..), NetworkIPSubscriptionTracers (..),
-                    NodeToClientVersionData (..), SubscriptionParams (..), WithAddr (..),
-                    ncSubscriptionWorker_V1, networkErrorPolicies, newNetworkMutableState)
+import           Ouroboros.Network.NodeToClient (ErrorPolicyTrace (..), 
+                    NodeToClientProtocols (..), NetworkSubscriptionTracers (..),
+                    NodeToClientVersionData (..), ClientSubscriptionParams (..), WithAddr (..),
+                    ncSubscriptionWorker_V1, networkErrorPolicies, newNetworkMutableState,
+                    AssociateWithIOCP, withIOManager, localSnocket)
 
 import qualified Ouroboros.Network.Point as Point
 import           Ouroboros.Network.Protocol.ChainSync.ClientPipelined (ChainSyncClientPipelined (..),
@@ -110,6 +114,7 @@ import           Ouroboros.Network.Protocol.LocalTxSubmission.Client (LocalTxSub
                     LocalTxClientStIdle (..), localTxSubmissionClientPeer)
 import           Ouroboros.Network.Protocol.LocalTxSubmission.Codec (codecLocalTxSubmission)
 import           Ouroboros.Network.Protocol.LocalTxSubmission.Type (LocalTxSubmission)
+import qualified Ouroboros.Network.Snocket as Snocket
 
 import           Prelude (String)
 import qualified Prelude
@@ -140,7 +145,7 @@ newtype SocketPath = SocketPath
 
 
 runExplorer :: ExplorerNodePlugin -> ExplorerNodeParams -> IO ()
-runExplorer plugin enp = do
+runExplorer plugin enp = withIOManager $ \iocp -> do
     DB.runMigrations Prelude.id True (enpMigrationDir enp) (LogFileDir "/tmp")
 
     enc <- readExplorerNodeConfig (unConfigFile $ enpConfigFile enp)
@@ -158,7 +163,7 @@ runExplorer plugin enp = do
       Right () -> pure ()
 
     runDbStartup trce plugin
-    void $ runExplorerNodeClient trce plugin (mkNodeConfig gc) (enpSocketPath enp)
+    void $ runExplorerNodeClient iocp trce plugin (mkNodeConfig gc) (enpSocketPath enp)
 
 
 mkTracer :: ExplorerNodeConfig -> IO (Trace IO Text)
@@ -189,29 +194,28 @@ readGenesisConfig enp enc = do
 runExplorerNodeClient
     :: forall blk.
         (blk ~ ByronBlock)
-    => Trace IO Text -> ExplorerNodePlugin -> NodeConfig (BlockProtocol blk) -> SocketPath
+    => AssociateWithIOCP
+    -> Trace IO Text -> ExplorerNodePlugin -> NodeConfig (BlockProtocol blk) -> SocketPath
     -> IO Void
-runExplorerNodeClient trce plugin nodeConfig (SocketPath socketPath) = do
+runExplorerNodeClient iocp trce plugin nodeConfig (SocketPath socketPath) = do
   logInfo trce $ "localInitiatorNetworkApplication: connecting to node via " <> textShow socketPath
   networkState <- newNetworkMutableState
   ncSubscriptionWorker_V1
+    (localSnocket iocp socketPath)
     -- TODO: these tracers should be configurable for debugging purposes.
-    NetworkIPSubscriptionTracers {
-        nistMuxTracer = nullTracer,
-        nistHandshakeTracer = nullTracer,
-        nistErrorPolicyTracer = errorPolicyTracer,
-        nistSubscriptionTracer = nullTracer
+    NetworkSubscriptionTracers {
+        nsMuxTracer = nullTracer,
+        nsHandshakeTracer = nullTracer,
+        nsErrorPolicyTracer = errorPolicyTracer,
+        nsSubscriptionTracer = nullTracer
         -- TODO subscription tracer should not be 'nullTracer' by default
       }
     networkState
-    SubscriptionParams {
-        spLocalAddresses = LocalAddresses Nothing Nothing (Just $ SockAddrUnix socketPath),
-        spConnectionAttemptDelay = const Nothing,
-        spErrorPolicies = networkErrorPolicies <> consensusErrorPolicy,
-        spSubscriptionTarget = IPSubscriptionTarget
-          { ispIps = [SockAddrUnix socketPath]
-          , ispValency = 1 }
-        }
+    ClientSubscriptionParams {
+        cspAddress = Snocket.localAddressFromPath socketPath,
+        cspConnectionAttemptDelay = Nothing,
+        cspErrorPolicies = networkErrorPolicies <> consensusErrorPolicy
+      }
     (NodeToClientVersionData { networkMagic = nodeNetworkMagic (Proxy @blk) nodeConfig })
     (localInitiatorNetworkApplication trce plugin nodeConfig)
   where
@@ -298,13 +302,16 @@ getCurrentTipBlockNo = do
     maybeTip <- DB.runDbNoLogging DB.queryLatestBlock
     case maybeTip of
       Just tip -> pure $ convert tip
-      Nothing -> pure genesisBlockNo
+      -- TODO: this does not seem right; the function should return `Maybe
+      -- BlockNo` instead of using invalid BlockNo.
+      Nothing -> pure $ BlockNo 0
   where
     convert :: DB.Block -> BlockNo
     convert blk =
       case DB.blockSlotNo blk of
         Just slot -> BlockNo slot
-        Nothing -> genesisBlockNo
+        -- TODO: as above
+        Nothing -> BlockNo 0
 
 -- | A 'LocalTxSubmissionClient' that submits transactions reading them from
 -- a 'StrictTMVar'.  A real implementation should use a better synchronisation
@@ -332,8 +339,8 @@ localChainSyncCodec
   -> Codec (ChainSync blk (Tip blk)) DeserialiseFailure m BSL.ByteString
 localChainSyncCodec pInfoConfig =
     codecChainSync
-      (nodeEncodeBlock pInfoConfig)
-      (nodeDecodeBlock pInfoConfig)
+      (wrapCBORinCBOR $ nodeEncodeBlock pInfoConfig)
+      (unwrapCBORinCBOR $ nodeDecodeBlock pInfoConfig)
       (encodePoint (nodeEncodeHeaderHash (Proxy @blk)))
       (decodePoint (nodeDecodeHeaderHash (Proxy @blk)))
       (encodeTip   (nodeEncodeHeaderHash (Proxy @blk)))
@@ -365,30 +372,30 @@ chainSyncClient trce metrics latestPoints currentTip actionQueue =
       SendMsgFindIntersect
         (if null latestPoints then [genesisPoint] else latestPoints)
         ClientPipelinedStIntersect
-          { recvMsgIntersectFound    = \_hdr tip -> pure $ go policy Zero currentTip (tipBlockNo tip)
-          , recvMsgIntersectNotFound = \  tip -> pure $ go policy Zero currentTip (tipBlockNo tip)
+          { recvMsgIntersectFound    = \_hdr tip -> pure $ go policy Zero currentTip (getLegacyTipBlockNo tip)
+          , recvMsgIntersectNotFound = \  tip -> pure $ go policy Zero currentTip (getLegacyTipBlockNo tip)
           }
   where
     policy = pipelineDecisionLowHighMark 1000 10000
 
     go :: MkPipelineDecision -> Nat n -> BlockNo -> BlockNo -> ClientPipelinedStIdle n ByronBlock (Tip blk) m a
     go mkPipelineDecision n clientTip serverTip =
-      case (n, runPipelineDecision mkPipelineDecision n clientTip serverTip) of
+      case (n, runPipelineDecision mkPipelineDecision n (At clientTip) (At serverTip)) of
         (_Zero, (Request, mkPipelineDecision')) ->
             SendMsgRequestNext clientStNext (pure clientStNext)
           where
-            clientStNext = mkClientStNext $ \clientBlockNo newServerTip -> go mkPipelineDecision' n clientBlockNo (tipBlockNo newServerTip)
+            clientStNext = mkClientStNext $ \clientBlockNo newServerTip -> go mkPipelineDecision' n clientBlockNo (getLegacyTipBlockNo newServerTip)
         (_, (Pipeline, mkPipelineDecision')) ->
           SendMsgRequestNextPipelined
             (go mkPipelineDecision' (Succ n) clientTip serverTip)
         (Succ n', (CollectOrPipeline, mkPipelineDecision')) ->
           CollectResponse
             (Just $ SendMsgRequestNextPipelined $ go mkPipelineDecision' (Succ n) clientTip serverTip)
-            (mkClientStNext $ \clientBlockNo newServerTip -> go mkPipelineDecision' n' clientBlockNo (tipBlockNo newServerTip))
+            (mkClientStNext $ \clientBlockNo newServerTip -> go mkPipelineDecision' n' clientBlockNo (getLegacyTipBlockNo newServerTip))
         (Succ n', (Collect, mkPipelineDecision')) ->
           CollectResponse
             Nothing
-            (mkClientStNext $ \clientBlockNo newServerTip -> go mkPipelineDecision' n' clientBlockNo (tipBlockNo newServerTip))
+            (mkClientStNext $ \clientBlockNo newServerTip -> go mkPipelineDecision' n' clientBlockNo (getLegacyTipBlockNo newServerTip))
 
     mkClientStNext :: (BlockNo -> Tip blk -> ClientPipelinedStIdle n ByronBlock (Tip blk) m a)
                     -> ClientStNext n ByronBlock (Tip ByronBlock) m a
@@ -397,9 +404,9 @@ chainSyncClient trce metrics latestPoints currentTip actionQueue =
         { recvMsgRollForward = \blk tip ->
             liftIO .
               logException trce "recvMsgRollForward: " $ do
-                Gauge.set (fromIntegral . unBlockNo $ tipBlockNo tip) $ mNodeHeight metrics
+                Gauge.set (fromIntegral . unBlockNo $ getLegacyTipBlockNo tip) $ mNodeHeight metrics
                 newSize <- atomically $ do
-                  writeDbActionQueue actionQueue $ DbApplyBlock blk (tipBlockNo tip)
+                  writeDbActionQueue actionQueue $ DbApplyBlock blk (getLegacyTipBlockNo tip)
                   lengthDbActionQueue actionQueue
                 Gauge.set (fromIntegral newSize) $ mQueuePostWrite metrics
                 pure $ finish (blockNo blk) tip
