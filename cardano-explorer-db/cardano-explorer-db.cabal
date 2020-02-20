@@ -47,6 +47,7 @@ library
   build-depends:        aeson
                       , base                            >= 4.12         && < 4.13
                       , base16-bytestring
+                      , base64-bytestring
                       , bytestring
                       , containers
                       , conduit
