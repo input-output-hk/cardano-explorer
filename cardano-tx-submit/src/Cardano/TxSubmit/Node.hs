@@ -54,8 +54,6 @@ import           Data.Void (Void)
 import           Network.Socket (SockAddr (..))
 
 import           Network.TypedProtocol.Channel (Channel)
-import           Network.TypedProtocol.Codec (Codec)
-import           Network.TypedProtocol.Codec.Cbor (DeserialiseFailure)
 import           Network.TypedProtocol.Driver (runPeer)
 
 import           Ouroboros.Consensus.Ledger.Abstract (BlockProtocol)
@@ -67,6 +65,7 @@ import           Ouroboros.Consensus.Node.Run.Abstract (RunNode, nodeDecodeGenTx
 import           Ouroboros.Consensus.Node.ErrorPolicy (consensusErrorPolicy)
 import           Ouroboros.Consensus.Protocol (NodeConfig, Protocol (..))
 
+import           Ouroboros.Network.Codec (Codec, DeserialiseFailure)
 import           Ouroboros.Network.Mux (AppType (..), OuroborosApplication (..))
 import           Ouroboros.Network.NodeToClient (ErrorPolicyTrace (..), IPSubscriptionTarget (..),
                     LocalAddresses (..), NodeToClientProtocols (..), NetworkIPSubscriptionTracers (..),

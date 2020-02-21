@@ -10,13 +10,12 @@ module Cardano.TxSubmit.ErrorRender
 
 import           Cardano.Chain.UTxO.Validation (TxValidationError (..), UTxOValidationError (..))
 import           Cardano.Chain.UTxO.UTxO (UTxOError(..))
+import           Cardano.Chain.Byron.API (ApplyMempoolPayloadErr (..))
 
 import           Data.Text (Text)
 import qualified Data.Text as Text
 
 import           Formatting ((%), build, sformat, stext)
-
-import           Ouroboros.Consensus.Ledger.Byron.Auxiliary (ApplyMempoolPayloadErr (..))
 
 
 renderApplyMempoolPayloadErr :: ApplyMempoolPayloadErr -> Text
