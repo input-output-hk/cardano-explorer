@@ -86,6 +86,7 @@ in { system, compiler, flags, pkgs, hsPkgs, pkgconfPkgs, ... }:
           (hsPkgs."network" or (buildDepError "network"))
           (hsPkgs."ouroboros-consensus" or (buildDepError "ouroboros-consensus"))
           (hsPkgs."ouroboros-network" or (buildDepError "ouroboros-network"))
+          (hsPkgs."ouroboros-network-framework" or (buildDepError "ouroboros-network-framework"))
           (hsPkgs."prometheus" or (buildDepError "prometheus"))
           (hsPkgs."serialise" or (buildDepError "serialise"))
           (hsPkgs."servant" or (buildDepError "servant"))
@@ -95,7 +96,6 @@ in { system, compiler, flags, pkgs, hsPkgs, pkgconfPkgs, ... }:
           (hsPkgs."transformers" or (buildDepError "transformers"))
           (hsPkgs."transformers-except" or (buildDepError "transformers-except"))
           (hsPkgs."typed-protocols" or (buildDepError "typed-protocols"))
-          (hsPkgs."typed-protocols-cbor" or (buildDepError "typed-protocols-cbor"))
           (hsPkgs."warp" or (buildDepError "warp"))
           (hsPkgs."yaml" or (buildDepError "yaml"))
           ];

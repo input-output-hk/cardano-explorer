@@ -18,7 +18,7 @@
         "persistent-template" = (((hackage.persistent-template)."2.8.2.3").revisions).default;
         "prometheus" = (((hackage.prometheus)."2.1.2").revisions).default;
         "pvss" = (((hackage.pvss)."0.2.0").revisions).default;
-        "tasty-hedgehog" = (((hackage.tasty-hedgehog)."1.0.0.1").revisions).default;
+        "tasty-hedgehog" = (((hackage.tasty-hedgehog)."1.0.0.2").revisions).default;
         "text-zipper" = (((hackage.text-zipper)."0.10.1").revisions).default;
         "time-units" = (((hackage.time-units)."1.0.0").revisions).default;
         "word-wrap" = (((hackage.word-wrap)."0.4.1").revisions).default;
@@ -37,10 +37,9 @@
         "http-api-data" = (((hackage.http-api-data)."0.4.1.1").revisions).default;
         "time-compat" = (((hackage.time-compat)."1.9.2.2").revisions).default;
         "base58-bytestring" = (((hackage.base58-bytestring)."0.1.0").revisions).default;
-        "hedgehog" = (((hackage.hedgehog)."1.0").revisions).default;
+        "hedgehog" = (((hackage.hedgehog)."1.0.2").revisions).default;
         "micro-recursion-schemes" = (((hackage.micro-recursion-schemes)."5.0.2.2").revisions).default;
         "streaming-binary" = (((hackage.streaming-binary)."0.3.0.1").revisions).default;
-        "cborg" = (((hackage.cborg)."0.2.2.0").revisions).default;
         "canonical-json" = (((hackage.canonical-json)."0.6.0.0").revisions).default;
         cardano-explorer-db = ./cardano-explorer-db.nix;
         cardano-explorer-db-test = ./cardano-explorer-db-test.nix;
@@ -77,8 +76,10 @@
         ouroboros-network = ./ouroboros-network.nix;
         ouroboros-consensus = ./ouroboros-consensus.nix;
         typed-protocols = ./typed-protocols.nix;
-        typed-protocols-cbor = ./typed-protocols-cbor.nix;
+        ouroboros-network-framework = ./ouroboros-network-framework.nix;
+        typed-protocols-examples = ./typed-protocols-examples.nix;
         cardano-crypto = ./cardano-crypto.nix;
+        cborg = ./cborg.nix;
         };
       compiler.version = "8.6.5";
       compiler.nix-name = "ghc865";

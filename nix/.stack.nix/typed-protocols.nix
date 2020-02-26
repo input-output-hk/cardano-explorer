@@ -65,28 +65,12 @@ in { system, compiler, flags, pkgs, hsPkgs, pkgconfPkgs, ... }:
           ];
         buildable = true;
         };
-      tests = {
-        "test-protocols" = {
-          depends = [
-            (hsPkgs."base" or (buildDepError "base"))
-            (hsPkgs."bytestring" or (buildDepError "bytestring"))
-            (hsPkgs."contra-tracer" or (buildDepError "contra-tracer"))
-            (hsPkgs."io-sim-classes" or (buildDepError "io-sim-classes"))
-            (hsPkgs."io-sim" or (buildDepError "io-sim"))
-            (hsPkgs."QuickCheck" or (buildDepError "QuickCheck"))
-            (hsPkgs."tasty" or (buildDepError "tasty"))
-            (hsPkgs."tasty-quickcheck" or (buildDepError "tasty-quickcheck"))
-            (hsPkgs."time" or (buildDepError "time"))
-            ];
-          buildable = true;
-          };
-        };
       };
     } // {
     src = (pkgs.lib).mkDefault (pkgs.fetchgit {
       url = "https://github.com/input-output-hk/ouroboros-network";
-      rev = "a43961c1133b9e1b0826f3d4d1bc5b93819037d6";
-      sha256 = "0pj3jnc8wmyx91r22idmkz4jw3mayady4c4wxy45w0lhgksr89x3";
+      rev = "5f77e24c2263560ad58b9ba092c8cfed174675ae";
+      sha256 = "00bm1fa83lc6jgh36mwr4zymzg9hvmq68y2hm4klk8c8gn7vwqqb";
       });
     postUnpack = "sourceRoot+=/typed-protocols; echo source root reset to \$sourceRoot";
     }

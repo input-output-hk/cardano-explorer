@@ -41,46 +41,55 @@ in { system, compiler, flags, pkgs, hsPkgs, pkgconfPkgs, ... }:
   {
     flags = {};
     package = {
-      specVersion = "2.0";
-      identifier = { name = "lobemo-scribe-systemd"; version = "0.1.0.0"; };
+      specVersion = "1.10";
+      identifier = { name = "typed-protocols-examples"; version = "0.1.0.0"; };
       license = "Apache-2.0";
-      copyright = "2019 IOHK";
-      maintainer = "operations@iohk.io";
-      author = "Alexander Diemand";
-      homepage = "https://github.com/input-output-hk/iohk-monitoring-framework";
+      copyright = "2019 Input Output (Hong Kong) Ltd.";
+      maintainer = "alex@well-typed.com, duncan@well-typed.com, marcin.szamotulski@iohk.io";
+      author = "Alexander Vieth, Duncan Coutts, Marcin Szamotulski";
+      homepage = "";
       url = "";
-      synopsis = "provides a backend for logging to systemd/journal";
+      synopsis = "Examples and tests for the typed-protocols framework";
       description = "";
       buildType = "Simple";
       isLocal = true;
       };
     components = {
       "library" = {
-        depends = ([
+        depends = [
           (hsPkgs."base" or (buildDepError "base"))
-          (hsPkgs."iohk-monitoring" or (buildDepError "iohk-monitoring"))
-          (hsPkgs."aeson" or (buildDepError "aeson"))
           (hsPkgs."bytestring" or (buildDepError "bytestring"))
-          (hsPkgs."katip" or (buildDepError "katip"))
-          (hsPkgs."text" or (buildDepError "text"))
-          (hsPkgs."template-haskell" or (buildDepError "template-haskell"))
-          (hsPkgs."unordered-containers" or (buildDepError "unordered-containers"))
-          ] ++ (if system.isWindows
-          then [ (hsPkgs."Win32" or (buildDepError "Win32")) ]
-          else [
-            (hsPkgs."unix" or (buildDepError "unix"))
-            ])) ++ (pkgs.lib).optionals (system.isLinux) [
-          (hsPkgs."hsyslog" or (buildDepError "hsyslog"))
-          (hsPkgs."libsystemd-journal" or (buildDepError "libsystemd-journal"))
+          (hsPkgs."contra-tracer" or (buildDepError "contra-tracer"))
+          (hsPkgs."io-sim-classes" or (buildDepError "io-sim-classes"))
+          (hsPkgs."time" or (buildDepError "time"))
+          (hsPkgs."typed-protocols" or (buildDepError "typed-protocols"))
           ];
         buildable = true;
+        };
+      tests = {
+        "typed-protocols-tests" = {
+          depends = [
+            (hsPkgs."base" or (buildDepError "base"))
+            (hsPkgs."bytestring" or (buildDepError "bytestring"))
+            (hsPkgs."contra-tracer" or (buildDepError "contra-tracer"))
+            (hsPkgs."typed-protocols" or (buildDepError "typed-protocols"))
+            (hsPkgs."typed-protocols-examples" or (buildDepError "typed-protocols-examples"))
+            (hsPkgs."io-sim-classes" or (buildDepError "io-sim-classes"))
+            (hsPkgs."io-sim" or (buildDepError "io-sim"))
+            (hsPkgs."QuickCheck" or (buildDepError "QuickCheck"))
+            (hsPkgs."tasty" or (buildDepError "tasty"))
+            (hsPkgs."tasty-quickcheck" or (buildDepError "tasty-quickcheck"))
+            (hsPkgs."time" or (buildDepError "time"))
+            ];
+          buildable = true;
+          };
         };
       };
     } // {
     src = (pkgs.lib).mkDefault (pkgs.fetchgit {
-      url = "https://github.com/input-output-hk/iohk-monitoring-framework";
-      rev = "49b347d892d82dce23eb692722649cd8a1149406";
-      sha256 = "0m6sa0lrqzfxhq7v5ncimlkd869pnq53khgpkivk0izsy46kfrq6";
+      url = "https://github.com/input-output-hk/ouroboros-network";
+      rev = "5f77e24c2263560ad58b9ba092c8cfed174675ae";
+      sha256 = "00bm1fa83lc6jgh36mwr4zymzg9hvmq68y2hm4klk8c8gn7vwqqb";
       });
-    postUnpack = "sourceRoot+=/plugins/scribe-systemd; echo source root reset to \$sourceRoot";
+    postUnpack = "sourceRoot+=/typed-protocols-examples; echo source root reset to \$sourceRoot";
     }

@@ -43,7 +43,7 @@ in { system, compiler, flags, pkgs, hsPkgs, pkgconfPkgs, ... }:
     package = {
       specVersion = "1.10";
       identifier = { name = "cardano-ledger"; version = "0.1.0.0"; };
-      license = "MIT";
+      license = "Apache-2.0";
       copyright = "2018 IOHK";
       maintainer = "operations@iohk.io";
       author = "IOHK";
@@ -58,6 +58,7 @@ in { system, compiler, flags, pkgs, hsPkgs, pkgconfPkgs, ... }:
       "library" = {
         depends = [
           (hsPkgs."base" or (buildDepError "base"))
+          (hsPkgs."aeson" or (buildDepError "aeson"))
           (hsPkgs."base58-bytestring" or (buildDepError "base58-bytestring"))
           (hsPkgs."base64-bytestring-type" or (buildDepError "base64-bytestring-type"))
           (hsPkgs."bimap" or (buildDepError "bimap"))
@@ -68,6 +69,7 @@ in { system, compiler, flags, pkgs, hsPkgs, pkgconfPkgs, ... }:
           (hsPkgs."cardano-crypto" or (buildDepError "cardano-crypto"))
           (hsPkgs."cardano-crypto-wrapper" or (buildDepError "cardano-crypto-wrapper"))
           (hsPkgs."cardano-prelude" or (buildDepError "cardano-prelude"))
+          (hsPkgs."cborg" or (buildDepError "cborg"))
           (hsPkgs."containers" or (buildDepError "containers"))
           (hsPkgs."contra-tracer" or (buildDepError "contra-tracer"))
           (hsPkgs."concurrency" or (buildDepError "concurrency"))
@@ -160,8 +162,8 @@ in { system, compiler, flags, pkgs, hsPkgs, pkgconfPkgs, ... }:
     } // {
     src = (pkgs.lib).mkDefault (pkgs.fetchgit {
       url = "https://github.com/input-output-hk/cardano-ledger";
-      rev = "c62e2eeba5756898cbf59732fccd6a83a4065c18";
-      sha256 = "04s2dp5dyikm2pxfphiyh429pckkg06dqx3sl4bbzvg6x5qfqvbn";
+      rev = "172b49ff1b6456851f10ae18f920fbfa733be0b0";
+      sha256 = "1515jhmhv22w8v2rqd2mckbsdd1vzaqdj9v8zdjsrrb1j5g59900";
       });
     postUnpack = "sourceRoot+=/cardano-ledger; echo source root reset to \$sourceRoot";
     }
