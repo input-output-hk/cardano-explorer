@@ -39,70 +39,70 @@ let
       '';
 in { system, compiler, flags, pkgs, hsPkgs, pkgconfPkgs, ... }:
   {
-    flags = { development = false; };
+    flags = { optimize-gmp = true; };
     package = {
       specVersion = "1.10";
-      identifier = { name = "cardano-binary"; version = "1.5.0"; };
-      license = "Apache-2.0";
-      copyright = "2019 IOHK";
-      maintainer = "operations@iohk.io";
-      author = "IOHK";
+      identifier = { name = "cborg"; version = "0.2.2.1"; };
+      license = "BSD-3-Clause";
+      copyright = "2015-2019 Duncan Coutts,\n2015-2019 Well-Typed LLP,\n2015 IRIS Connect Ltd";
+      maintainer = "duncan@community.haskell.org, ben@smart-cactus.org";
+      author = "Duncan Coutts";
       homepage = "";
       url = "";
-      synopsis = "Binary serialization for Cardano";
-      description = "This package includes the binary serialization format for Cardano";
+      synopsis = "Concise Binary Object Representation (CBOR)";
+      description = "This package provides an efficient implementation of the Concise\nBinary Object Representation (CBOR), as specified by\n[RFC 7049](https://tools.ietf.org/html/rfc7049).\n\nIf you are looking for a library for serialisation of Haskell values,\nhave a look at the [serialise](/package/serialise) package, which is\nbuilt upon this library.\n\nAn implementation of the standard bijection between CBOR and JSON is\nprovided by the [cborg-json](/package/cborg-json) package. Also see\n[cbor-tool](/package/cbor-tool) for a convenient command-line utility\nfor working with CBOR data.\n\nThis package was formerly known as @binary-serialise-cbor@.";
       buildType = "Simple";
       isLocal = true;
       };
     components = {
       "library" = {
-        depends = [
+        depends = ([
+          (hsPkgs."array" or (buildDepError "array"))
           (hsPkgs."base" or (buildDepError "base"))
-          (hsPkgs."aeson" or (buildDepError "aeson"))
           (hsPkgs."bytestring" or (buildDepError "bytestring"))
-          (hsPkgs."cardano-prelude" or (buildDepError "cardano-prelude"))
-          (hsPkgs."cborg" or (buildDepError "cborg"))
           (hsPkgs."containers" or (buildDepError "containers"))
-          (hsPkgs."digest" or (buildDepError "digest"))
-          (hsPkgs."formatting" or (buildDepError "formatting"))
-          (hsPkgs."recursion-schemes" or (buildDepError "recursion-schemes"))
-          (hsPkgs."safe-exceptions" or (buildDepError "safe-exceptions"))
-          (hsPkgs."tagged" or (buildDepError "tagged"))
+          (hsPkgs."deepseq" or (buildDepError "deepseq"))
+          (hsPkgs."ghc-prim" or (buildDepError "ghc-prim"))
+          (hsPkgs."half" or (buildDepError "half"))
+          (hsPkgs."primitive" or (buildDepError "primitive"))
           (hsPkgs."text" or (buildDepError "text"))
-          (hsPkgs."time" or (buildDepError "time"))
-          (hsPkgs."vector" or (buildDepError "vector"))
+          ] ++ (pkgs.lib).optional (flags.optimize-gmp) (hsPkgs."integer-gmp" or (buildDepError "integer-gmp"))) ++ (pkgs.lib).optionals (!(compiler.isGhc && (compiler.version).ge "8.0")) [
+          (hsPkgs."fail" or (buildDepError "fail"))
+          (hsPkgs."semigroups" or (buildDepError "semigroups"))
           ];
         buildable = true;
         };
       tests = {
-        "test" = {
+        "tests" = {
           depends = [
+            (hsPkgs."array" or (buildDepError "array"))
             (hsPkgs."base" or (buildDepError "base"))
+            (hsPkgs."base-orphans" or (buildDepError "base-orphans"))
             (hsPkgs."bytestring" or (buildDepError "bytestring"))
-            (hsPkgs."cardano-binary" or (buildDepError "cardano-binary"))
-            (hsPkgs."cardano-prelude" or (buildDepError "cardano-prelude"))
-            (hsPkgs."cardano-prelude-test" or (buildDepError "cardano-prelude-test"))
-            (hsPkgs."cborg" or (buildDepError "cborg"))
-            (hsPkgs."containers" or (buildDepError "containers"))
-            (hsPkgs."formatting" or (buildDepError "formatting"))
-            (hsPkgs."hedgehog" or (buildDepError "hedgehog"))
-            (hsPkgs."hspec" or (buildDepError "hspec"))
-            (hsPkgs."pretty-show" or (buildDepError "pretty-show"))
-            (hsPkgs."QuickCheck" or (buildDepError "QuickCheck"))
-            (hsPkgs."quickcheck-instances" or (buildDepError "quickcheck-instances"))
-            (hsPkgs."tagged" or (buildDepError "tagged"))
             (hsPkgs."text" or (buildDepError "text"))
+            (hsPkgs."cborg" or (buildDepError "cborg"))
+            (hsPkgs."aeson" or (buildDepError "aeson"))
+            (hsPkgs."base64-bytestring" or (buildDepError "base64-bytestring"))
+            (hsPkgs."base16-bytestring" or (buildDepError "base16-bytestring"))
+            (hsPkgs."deepseq" or (buildDepError "deepseq"))
+            (hsPkgs."half" or (buildDepError "half"))
+            (hsPkgs."QuickCheck" or (buildDepError "QuickCheck"))
+            (hsPkgs."random" or (buildDepError "random"))
+            (hsPkgs."scientific" or (buildDepError "scientific"))
+            (hsPkgs."tasty" or (buildDepError "tasty"))
+            (hsPkgs."tasty-hunit" or (buildDepError "tasty-hunit"))
+            (hsPkgs."tasty-quickcheck" or (buildDepError "tasty-quickcheck"))
             (hsPkgs."vector" or (buildDepError "vector"))
-            ];
+            ] ++ (pkgs.lib).optional (!(compiler.isGhc && (compiler.version).ge "8.0")) (hsPkgs."fail" or (buildDepError "fail"));
           buildable = true;
           };
         };
       };
     } // {
     src = (pkgs.lib).mkDefault (pkgs.fetchgit {
-      url = "https://github.com/input-output-hk/cardano-base";
-      rev = "a7b403c1762a6a122a691df816c26563b7e547f8";
-      sha256 = "0j87xb20xkl2h5vbqhn9af7dqjwwcbp60nwsp1yablzv295gnxwi";
+      url = "https://github.com/well-typed/cborg";
+      rev = "42a83192749774268337258f4f94c97584b80ca6";
+      sha256 = "1smjni26p14p41d1zjpk59jn28zfnpblin5rq6ipp4cjpjiril04";
       });
-    postUnpack = "sourceRoot+=/binary; echo source root reset to \$sourceRoot";
+    postUnpack = "sourceRoot+=/cborg; echo source root reset to \$sourceRoot";
     }

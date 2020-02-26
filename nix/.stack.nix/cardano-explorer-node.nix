@@ -85,6 +85,7 @@ in { system, compiler, flags, pkgs, hsPkgs, pkgconfPkgs, ... }:
           (hsPkgs."network" or (buildDepError "network"))
           (hsPkgs."ouroboros-consensus" or (buildDepError "ouroboros-consensus"))
           (hsPkgs."ouroboros-network" or (buildDepError "ouroboros-network"))
+          (hsPkgs."ouroboros-network-framework" or (buildDepError "ouroboros-network-framework"))
           (hsPkgs."persistent" or (buildDepError "persistent"))
           (hsPkgs."prometheus" or (buildDepError "prometheus"))
           (hsPkgs."serialise" or (buildDepError "serialise"))
@@ -94,7 +95,6 @@ in { system, compiler, flags, pkgs, hsPkgs, pkgconfPkgs, ... }:
           (hsPkgs."transformers" or (buildDepError "transformers"))
           (hsPkgs."transformers-except" or (buildDepError "transformers-except"))
           (hsPkgs."typed-protocols" or (buildDepError "typed-protocols"))
-          (hsPkgs."typed-protocols-cbor" or (buildDepError "typed-protocols-cbor"))
           (hsPkgs."yaml" or (buildDepError "yaml"))
           ];
         buildable = true;
@@ -119,10 +119,10 @@ in { system, compiler, flags, pkgs, hsPkgs, pkgconfPkgs, ... }:
             (hsPkgs."network" or (buildDepError "network"))
             (hsPkgs."optparse-applicative" or (buildDepError "optparse-applicative"))
             (hsPkgs."ouroboros-network" or (buildDepError "ouroboros-network"))
+            (hsPkgs."ouroboros-network-framework" or (buildDepError "ouroboros-network-framework"))
             (hsPkgs."serialise" or (buildDepError "serialise"))
             (hsPkgs."text" or (buildDepError "text"))
             (hsPkgs."typed-protocols" or (buildDepError "typed-protocols"))
-            (hsPkgs."typed-protocols-cbor" or (buildDepError "typed-protocols-cbor"))
             ];
           buildable = true;
           };

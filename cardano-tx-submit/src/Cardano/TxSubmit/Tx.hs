@@ -17,7 +17,7 @@ import           Control.Monad.Class.MonadSTM.Strict (StrictTMVar,
                     atomically, newEmptyTMVarM, putTMVar, takeTMVar)
 
 import           Ouroboros.Consensus.Ledger.Byron (ByronBlock (..), GenTx (..))
-import           Ouroboros.Consensus.Ledger.Byron.Auxiliary (ApplyMempoolPayloadErr)
+import           Cardano.Chain.Byron.API (ApplyMempoolPayloadErr)
 
 -- The type of 'reject' (determined by ouroboros-network) is currently 'Maybe String'.
 -- Hopefully that will be fixed to make it a concrete type.
