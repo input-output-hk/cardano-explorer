@@ -1,3 +1,10 @@
+# repo is deprivated 
+please seen the separate repos here:
+
+https://github.com/input-output-hk/cardano-db-sync
+https://github.com/input-output-hk/cardano-graphql
+https://github.com/input-output-hk/cardano-rest
+
 # Cardano Explorer
 
 The new cardano-explorer consists of a set of components:
