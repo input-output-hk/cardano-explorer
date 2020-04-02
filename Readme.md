@@ -1,9 +1,20 @@
-# repo is deprivated 
-please seen the separate repos here:
+# Disclaimer
 
-https://github.com/input-output-hk/cardano-db-sync
-https://github.com/input-output-hk/cardano-graphql
-https://github.com/input-output-hk/cardano-rest
+:warning: Since 2020-02-13, development of these components has been split and moved to different locations :warning:.
+
+- If you are an **existing API user** using the **current** Byron explorer API or transaction submission API, have a look at:
+
+  https://github.com/input-output-hk/cardano-rest
+
+  :warning: Note however that this project will no longer undergo feature updates and will not be updated for Shelley.
+  
+- If you are a **new API user** looking for long-term solutions which will also work with Shelley, have a look at:   
+
+  https://github.com/input-output-hk/cardano-graphql
+  
+- If you are a **curious developer** keen on knowing the internals and understanding what happens behind the scene, you can dive into:
+
+  https://github.com/input-output-hk/cardano-db-sync
 
 # Cardano Explorer
 
