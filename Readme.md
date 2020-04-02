@@ -1,8 +1,8 @@
-# repo is deprivated 
-please seen the separate repos here:
+# This repository is depricated 
+Cardano Explorer development has been moved to the following repositories:
 
-https://github.com/input-output-hk/cardano-db-sync
-https://github.com/input-output-hk/cardano-graphql
+https://github.com/input-output-hk/cardano-db-sync  
+https://github.com/input-output-hk/cardano-graphql   
 https://github.com/input-output-hk/cardano-rest
 
 # Cardano Explorer
