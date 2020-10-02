@@ -59,9 +59,14 @@ in {
   # lorri. See https://input-output-hk.github.io/haskell.nix/user-guide/development/
   shell = haskellPackages.shellFor {
     name = "iohk-skeleton-shell";
-    # TODO: List all local packages in the project.
+    # TODO: Add missing packages: cardano-extended-db-node.
     packages = ps: with ps; [
       cardano-explorer-webapi
+      cardano-explorer-db
+      cardano-explorer-db-test
+      cardano-explorer-node
+      cardano-explorer-webapi
+      cardano-tx-submit
     ];
     # These programs will be available inside the nix-shell.
     buildInputs =
