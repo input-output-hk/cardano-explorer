@@ -43,7 +43,16 @@ let
 
   inherit (systems.examples) mingwW64 musl64;
   #inherit (import ./nix/nixos/tests { }) chairmansCluster;
-  inherit (import ./docker { }) hydraJob;
+  inherit (import ./docker { }) hydraJob patchedNixpkgs;
+  self = import ./. {};
+  sources = import ./nix/sources.nix;
+  cardano-sources = import "${sources.cardano-node}/nix/sources.nix";
+
+  mkPins = inputs: pkgs.runCommand "ifd-pins" {} ''
+    mkdir $out
+    cd $out
+    ${lib.concatMapStringsSep "\n" (input: "ln -sv ${input.value} ${input.key}") (lib.attrValues (lib.mapAttrs (key: value: { inherit key value; }) inputs))}
+  '';
 
   jobs = {
     native = mapTestOn (packagePlatforms project);
@@ -51,6 +60,20 @@ let
 
     #chairmansCluster = chairmansCluster.x86_64-linux;
     docker-inputs = hydraJob;
+    ifd-pins = mkPins {
+      inherit (sources) iohk-nix ops-lib cardano-node;
+      inherit patchedNixpkgs;
+      inherit (self) haskell_nix;
+      # TODO, have these in the haskell.nix ifd-pins
+      stackageSrc = self.haskell.stackageSrc;
+      hackageSrc = self.haskell.hackageSrc;
+      # TODO, have these in the cardano-node ifd-pins
+      cardano-pkgs = cardano-sources.nixpkgs;
+      cardano-haskell = cardano-sources."haskell.nix";
+      cardano-iohk-nix = cardano-sources.iohk-nix;
+      cardano-hackage = (import sources.nixpkgs (import cardano-sources."haskell.nix")).haskell-nix.hackageSrc;
+      cardano-stackage = (import sources.nixpkgs (import cardano-sources."haskell.nix")).haskell-nix.stackageSrc;
+    };
   }
   // (
   # This aggregate job is what IOHK Hydra uses to update
